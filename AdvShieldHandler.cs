@@ -144,6 +144,7 @@ namespace AdvShields
             {
                 CurrentDamageSustained = maxEnergy;
                 controller.ShieldData.IsShieldOn.Us = enumShieldDomeState.Off;
+                controller.ShieldDome.gameObject.GetComponent<MeshRenderer>().enabled = false;
             }
 
             float remainingHealthFraction = Mathf.Clamp01((maxEnergy - CurrentDamageSustained) / maxEnergy);
