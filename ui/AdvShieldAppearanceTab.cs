@@ -32,6 +32,8 @@ namespace AdvShields.UI
             standardSegment1.AddInterpretter(Quick.SliderNub(data, t => "Edge", null));
             standardSegment1.AddInterpretter(Quick.SliderNub(data, t => "Fresnel", null));
             standardSegment1.AddInterpretter(Quick.SliderNub(data, t => "AssembleSpeed", null));
+            standardSegment1.AddInterpretter(Quick.SliderNub(data, t => "NoiseFactor", null));
+            standardSegment1.AddInterpretter(Quick.SliderNub(data, t => "StaticFlickerSpeed", null));
             standardSegment1.AddInterpretter(new Blank(30f));
 
             StringDisplay stringDisplay3 = standardSegment1.AddInterpretter(StringDisplay.Quick("<i>Select animated appearance of the shield:</i>"));

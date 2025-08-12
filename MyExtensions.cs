@@ -35,6 +35,8 @@ using BrilliantSkies.Modding;
 using BrilliantSkies.Ftd.AdvancedCannons;
 using BrilliantSkies.Blocks.Shields.Ui;
 using BrilliantSkies.Ftd.Constructs.Modules.Main.Scuttling;
+using BrilliantSkies.Ftd.Modes.MainMenu.Ui;
+using DomeShieldTwo.shieldblocksystem;
 namespace AdvShields
 {
     public static class CIL_Control
@@ -72,6 +74,19 @@ namespace AdvShields
             return targetIndex;
         }
     }
+    [HarmonyPatch(typeof(MainMenuUi), "LateUpdateWhenActive", new Type[] {})]
+
+    internal class PleaseWorkPatch
+    {
+        private static void Prefix()
+        {
+            if (!StaticStorage.HasLoaded)
+            {
+                StaticStorage.HasLoaded = true;
+                StaticStorage.LoadAsset();
+            }
+        }
+    }
 
     [HarmonyPatch(typeof(ExplosionExtras), "ExplodeNearbyObjects", new Type[] { typeof(Vector3), typeof(float), typeof(float), typeof(IDamageLogger), typeof(bool) })]
     internal class ExplosionOnMainConstructPatch
@@ -95,6 +110,16 @@ namespace AdvShields
         }
     }
 
+    [HarmonyPatch(typeof(ConstructSets), "LinkUpExternallyPriorToBlocksInitialising", new Type[] {})]
+    internal class ConstructSetsPatch
+    {
+        private static void Postfix(ConstructSets __instance)
+        {
+            DomeShieldNodeSet DSNodeSetToAdd = new DomeShieldNodeSet(__instance._construct);
+            __instance.DictionaryOfAllSets.Add<DomeShieldNodeSet>(DSNodeSetToAdd);
+        }
+    }
+
     [HarmonyPatch(typeof(ObjectCasting), "ShieldsQuick", new Type[] { typeof(GridCastReturn), typeof(Func<ShieldProjector, bool>) })]
     internal class ShieldsQuickPatch
     {
@@ -105,7 +130,7 @@ namespace AdvShields
                 if (item.ShieldData.IsShieldOn == enumShieldDomeState.Off) continue;
 
                 Elipse elipse = item.ShieldHandler.Shape;
-                elipse.UpdateInfo();
+                //elipse.UpdateInfo();
 
                 bool hitSomething = elipse.CheckIntersection(results.Position, results.Direction, out Vector3 hitPointIn, out Vector3 hitNormal);
                 if (!hitSomething) continue;
@@ -153,6 +178,7 @@ namespace AdvShields
             return codes.AsEnumerable();
         }
     }
+    /*
      //original
     [HarmonyPatch(typeof(ProjectileCastingSystem), "Cast", new Type[] { typeof(ProjectileImpactState), typeof(ISettablePositionAndRotation), typeof(Vector3), typeof(Vector3), typeof(Vector3), typeof(float), typeof(Vector3), typeof(int), typeof(Color) })]
     internal class ProjectileCastingSystem_Cast_CramPostfix
@@ -192,6 +218,7 @@ namespace AdvShields
             }
         }
     }
+    */
     /*
     [HarmonyPatch(typeof(ProjectileCastingSystem), "CastMe", new Type[] { typeof(ProjectileImpactState), typeof(ISettablePositionAndRotation), typeof(Vector3), typeof(Vector3), typeof(Vector3), typeof(float), typeof(Vector3), typeof(int), typeof(Color) })]
     internal class ProjectileCastingSystem_CastMe_APSPostfix

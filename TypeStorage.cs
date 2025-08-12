@@ -6,12 +6,14 @@ using System.Threading.Tasks;
 using System.Data;
 using BrilliantSkies.Core.Collections;
 using BrilliantSkies.Core.ImageFinder;
+using DomeShieldTwo.shieldblocksystem;
 
 namespace AdvShields
 {
     public static class TypeStorage
     {
         private static Dictionary<string, HashSet<AdvShieldProjector>> StorageContainer { get; set; }
+        private static Dictionary<string, HashSet<DomeShieldMultipurpose>> ShieldStorageContainer { get; set; }
         /*
         private static Dictionary<string, HashSet<ShieldHardpoint>> ShieldStorageContainer { get; set; }
         private static Dictionary<string, HashSet<ShieldNode>> ShieldNodeContainer { get; set; }
@@ -22,6 +24,7 @@ namespace AdvShields
         static TypeStorage()
         {
             StorageContainer = new Dictionary<string, HashSet<AdvShieldProjector>>();
+            ShieldStorageContainer = new Dictionary<string, HashSet<DomeShieldMultipurpose>>();
             /*
             ShieldStorageContainer = new Dictionary<string, HashSet<ShieldHardpoint>>();
             ShieldNodeContainer = new Dictionary<string, HashSet<ShieldNode>>();
@@ -36,6 +39,13 @@ namespace AdvShields
                 return storage;
             else
                 return new HashSet<AdvShieldProjector>();
+        }
+        public static HashSet<DomeShieldMultipurpose> GetShieldObjects()
+        {
+            if (ShieldStorageContainer.TryGetValue(typeof(DomeShieldMultipurpose).FullName, out var storage))
+                return storage;
+            else
+                return new HashSet<DomeShieldMultipurpose>();
         }
         /*
         public static HashSet<ShieldHardpoint> GetShieldObjects()
@@ -91,6 +101,32 @@ namespace AdvShields
             if (StorageContainer.TryGetValue(typeof(AdvShieldProjector).FullName, out var value))
             {
                 HashSet<AdvShieldProjector> storage = value;
+
+                if (storage.Contains(oldValue))
+                    storage.Remove(oldValue);
+            }
+        }
+        public static void AddHardpoint(DomeShieldMultipurpose newValue)
+        {
+            HashSet<DomeShieldMultipurpose> storage;
+
+            if (ShieldStorageContainer.TryGetValue(typeof(DomeShieldMultipurpose).FullName, out var value))
+            {
+                storage = value;
+            }
+            else
+            {
+                storage = new HashSet<DomeShieldMultipurpose>();
+                ShieldStorageContainer.Add(typeof(DomeShieldMultipurpose).FullName, storage);
+            }
+
+            storage.Add(newValue);
+        }
+        public static void RemoveHardpoint(DomeShieldMultipurpose oldValue)
+        {
+            if (ShieldStorageContainer.TryGetValue(typeof(DomeShieldMultipurpose).FullName, out var value))
+            {
+                HashSet<DomeShieldMultipurpose> storage = value;
 
                 if (storage.Contains(oldValue))
                     storage.Remove(oldValue);

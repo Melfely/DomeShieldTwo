@@ -8,6 +8,7 @@ using BrilliantSkies.Core.JsonPlus.Converters;
 using BrilliantSkies.Core.Units;
 using BrilliantSkies.Modding.Types;
 using AdvShields.Models;
+using DomeShieldTwo.shieldblocksystem;
 
 namespace AdvShields
 {
@@ -27,9 +28,11 @@ namespace AdvShields
 
         public float MaxEnergy { get; private set; }
 
-        public float Doublers { get; private set; }
+        public float Hardeners { get; private set; }
 
-        public float Destabilizers { get; private set; }
+        public float Transformers { get; private set; }
+
+        public float Rectifiers { get; private set; }
 
         public float EnergyBeforeMods { get; private set; }
 
@@ -42,10 +45,13 @@ namespace AdvShields
         public float HealthFromPowerScale {  get; private set; }
 
         public float ACFromPowerScale { get; private set; }
+                //Armour Class
 
         public float PRFromPowerScale { get; private set; }
+                //Passive Regeneration
 
         public float WTFromPowerScale { get; private set; }
+                //Wait Time
 
         public float ArmorClass { get; private set; }
 
@@ -81,9 +87,9 @@ namespace AdvShields
 
         public float PassiveRegen { get; private set; }
 
-        public float DoublersACFactor { get; private set; }
+        public float HardenersACFactor { get; private set; }
 
-        public float DestbalisersACFactor { get; private set; }
+        public float TransformersACFactor { get; private set; }
 
         public float PassiveRegenModifier { get; private set; }
 
@@ -91,26 +97,19 @@ namespace AdvShields
 
         public float MinimumPassiveRegen { get; private set; }
 
-        /*private static float GetAp(int doublers, int pumps, bool isContinuous, float totalEnergyCapacity)
-        {
-            float num = totalEnergyCapacity / 2500f;
-            float b = (float)pumps + num;
-            float num2 = 40f + (float)doublers * 100f / Mathf.Max(1f, b);
-            return isContinuous ? (num2 * 1.5f) : num2;
+        public float PowerReductionFromRectifiers { get; private set; }
 
-            /*ORIGINAL: float num = totalEnergyCapacity / LaserConstants.PumpCavityCapacityEquivalent(10000f);
-            float b = (float)pumps + num;
-            float num2 = LaserConstants.PulsedBaseAp(40) + (float)doublers * LaserConstants.PulsedApPerDoubler(100f) / Mathf.Max(1f, b);
-            return isContinuous ? (num2 * LaserConstants.ContinuousApMultiplier[1.5f]) : num2;*/
-        //}*/
-        //The game already knows doublers, pumps, isContinuous, and totalEnergyCapacity. It divides totalEnergy Capacity by LaserConstants.PumpCavityCapacityEquivalent (10000) to get "num". It then adds the meters of pumps to "num" to get "b". Then, the game adds LaserConstants.PulsedBaseAp (40) to the amount of frequency doublers, then multiplies this by LaserConstants.PulsedApPerDoubler (100), then divides this by Math.Max(1f, b), meaning it will be divided by 1 or by "b", whichever is higher, to get "num2" Finally, ifContinuous will apply a LaserConstants.ContinuousApMultiplier (1.5) if the laser is continuous. If not, it won't. A?x:y means that if A is true, x happens, otherwise y happens
         public float WaitTime { get; set; }
            
         private bool IsContinuous { get; set; }
 
-        public float DoublersForUI { get; set; }
+        public float HardenersForUI { get; set; }
 
-        public float DestabilizersForUI { get; set; }
+        public float TransformersForUI { get; set; }
+
+        public float RectifiersForUI { get; set; }
+
+        public float PowerSavingFromRectifiersForUI { get; set; }
 
         public AdvShieldStatus(AdvShieldProjector controller, float maxEnergyFactor, float armorClassFactor, float passiveRegenFactor)
         {
@@ -124,31 +123,33 @@ namespace AdvShields
 
         public void Update()
         {
+            //Why on God's green earth is this Update. Dear Lord Jesus we need to make this not every frame. I can't believe the game doesn't run slower.
             Energy = 0;
             ArmorClass = 1;
 
 
 
-            LaserNode laserNode = controller.ConnectLaserNode;
+            DomeShieldNode dSNode = controller.ConnectShieldNode;
 
-            if (laserNode != null)
+            if (dSNode != null)
             {
-                int doublers = 0;
+                int hardeners = 0;
                 int pumps = 0;
                 //int totalEnergyCapacity = 0;
-                int destabilisers = 0;
-                int allQSwitches = 0;
+                int transformers = 0;
+                int rectifiers = 0;
                 PowerScale = this.controller.ShieldData.ExcessDrive;
-                foreach (LaserCoupler laserCoupler in laserNode.couplers)
+                foreach (DomeShieldCoupler dSCoupler in dSNode.dSCouplers)
                 {
-                    allQSwitches = laserCoupler.NbQSwitches;
-                    foreach (BeamInfo beamInfo in laserCoupler.beamInfo)
+                    foreach (DomeShieldBeamInfo beamInfo in dSCoupler.dSBeamInfo)
                     {
-                        doublers += beamInfo.FrequencyDoublers;
+                        hardeners += beamInfo.Hardeners;
                         pumps += beamInfo.CubicMetresOfPumping;
-                        destabilisers += beamInfo.Destabilisers; //these 3 are grabbing the amount of doublers, pumps, and destabs in the laser system. Pumps are no longer needed and will probably be removed eventually.
-                        Doublers = doublers;
-                        Destabilizers = destabilisers; //these 2 are effectively converting int to float
+                        transformers += beamInfo.Transformers; //these 3 are grabbing the amount of doublers, pumps, and destabs in the laser system.
+                        rectifiers += beamInfo.Rectifiers;
+                        Hardeners = hardeners;
+                        Transformers = transformers; //these 2 are effectively converting int to float
+                        Rectifiers = rectifiers;
                     }
                 }
 
@@ -256,38 +257,38 @@ namespace AdvShields
                     ShieldType = "ERROR: NO SHIELD CLASS SELECTED. PLEASE REPORT THIS ERROR";
                     //Error
                 }
-                DoublersACFactor = (doublers) +0.01f;
-                if (DoublersACFactor > 1.3f)
+                HardenersACFactor = (hardeners) +0.01f;
+                if (HardenersACFactor > 1.3f)
                 {
-                    DoublersACFactor = (float)Math.Pow(DoublersACFactor = (doublers) + 0.01f, 0.90f)+0.1f;
-                    if (DoublersACFactor < 1.3f)
+                    HardenersACFactor = (float)Math.Pow(HardenersACFactor = (hardeners) + 0.01f, 0.90f)+0.1f;
+                    if (HardenersACFactor < 1.3f)
                     {
-                        DoublersACFactor = 1.3f;
+                        HardenersACFactor = 1.3f;
                     }
                 }
-                if (DoublersACFactor > 10f)
+                if (HardenersACFactor > 10f)
                 {
-                    DoublersACFactor = (float)Math.Pow(DoublersACFactor = (doublers) + 0.01f, 0.60f) + 4.1f;
-                    if (DoublersACFactor < 10f)
+                    HardenersACFactor = (float)Math.Pow(HardenersACFactor = (hardeners) + 0.01f, 0.60f) + 4.1f;
+                    if (HardenersACFactor < 10f)
                     {
-                        DoublersACFactor = 10f;
+                        HardenersACFactor = 10f;
                     }
                 }
-                DestbalisersACFactor = (destabilisers / 3f) + 0.005f;
-                if (DestbalisersACFactor > 1.29f)
+                TransformersACFactor = (transformers / 3f) + 0.005f;
+                if (TransformersACFactor > 1.29f)
                 {
-                    DestbalisersACFactor = (float)Math.Pow(DestbalisersACFactor = (destabilisers / 3f) + 0.01f, 0.85f) + 1f;
-                    if (DestbalisersACFactor < 1.29f)
+                    TransformersACFactor = (float)Math.Pow(TransformersACFactor = (transformers / 3f) + 0.01f, 0.85f) + 1f;
+                    if (TransformersACFactor < 1.29f)
                     {
-                        DestbalisersACFactor = 1.29f;
+                        TransformersACFactor = 1.29f;
                     }
                 }
-                if (DestbalisersACFactor > 10f)
+                if (TransformersACFactor > 10f)
                 {
-                    DestbalisersACFactor = (float)Math.Pow(DestbalisersACFactor = (destabilisers / 3f + 0.01f), 0.60f) + 4.1f;
-                    if (DestbalisersACFactor < 10f)
+                    TransformersACFactor = (float)Math.Pow(TransformersACFactor = (transformers / 3f + 0.01f), 0.60f) + 4.1f;
+                    if (TransformersACFactor < 10f)
                     {
-                        DestbalisersACFactor = 10f;
+                        TransformersACFactor = 10f;
                     }
                 }
 
@@ -302,13 +303,14 @@ namespace AdvShields
                     PassiveOnOffACChange = 1.05f;
                     PassiveOnOffHChange = 1.02f;
                 }
-                DestabilizersForUI = destabilisers;
-                DoublersForUI = doublers;
+                TransformersForUI = transformers;
+                HardenersForUI = hardeners;
+                RectifiersForUI = rectifiers;
                 //float ap = AdvShieldStatus.GetAp(doublers, pumps, IsContinuous, totalEnergyCapacity);
-                MaxEnergy = (float)Math.Round((((laserNode.GetMaximumEnergy() * maxEnergyFactor / ((float)Math.Pow(destabilisers, 1.1134) / 900f + 1f) / ((float)Math.Pow(doublers, 1.1134) / 900f + 1f) * PassiveOnOffHChange) * BaseHealthModifier) * PowerScaleHealthModifier), 2);
-                Energy = (float)Math.Round((((laserNode.GetTotalEnergyAvailable() * maxEnergyFactor / ((float)Math.Pow(destabilisers, 1.1134) / 900f + 1f) / ((float)Math.Pow(doublers, 1.1134) / 900f + 1f) * PassiveOnOffHChange) * BaseHealthModifier) * PowerScaleHealthModifier), 2);
-                ArmorClass = (float)Math.Round(((BaseShieldArmorClass + (DoublersACFactor / 2) - DestbalisersACFactor) / (MaxEnergy / Energy) * PassiveOnOffACChange * armorClassFactor) + PowerScaleACModifier, 1);
-                PassiveRegen = (float)Math.Round((float)(((((MaxEnergy * 0.01f) + 1f) * ((float)Math.Pow(1.01312f, Math.Min(destabilisers, 300)) + (Math.Max(destabilisers - 300, 0) * 1.2f) + 1f) / ((float)Math.Pow(1.01078f, Math.Min(doublers, 300)) + (Math.Max(doublers - 300, 0) * .05f) + 1f) * PassiveRegenModifier) * passiveRegenFactor) * PowerScalePRModifier), 2);
+                MaxEnergy = (float)Math.Round((((dSNode.GetMaximumEnergy() * maxEnergyFactor / ((float)Math.Pow(transformers, 1.1134) / 900f + 1f) / ((float)Math.Pow(hardeners, 1.1134) / 900f + 1f) * PassiveOnOffHChange) * BaseHealthModifier) * PowerScaleHealthModifier), 2);
+                Energy = (float)Math.Round((((dSNode.GetTotalEnergyAvailable() * maxEnergyFactor / ((float)Math.Pow(transformers, 1.1134) / 900f + 1f) / ((float)Math.Pow(hardeners, 1.1134) / 900f + 1f) * PassiveOnOffHChange) * BaseHealthModifier) * PowerScaleHealthModifier), 2);
+                ArmorClass = (float)Math.Round(((BaseShieldArmorClass + (HardenersACFactor / 2) - TransformersACFactor) / (MaxEnergy / Energy) * PassiveOnOffACChange * armorClassFactor) + PowerScaleACModifier, 1);
+                PassiveRegen = (float)Math.Round((float)(((((MaxEnergy * 0.01f) + 1f) * ((float)Math.Pow(1.01312f, Math.Min(transformers, 300)) + (Math.Max(transformers - 300, 0) * 1.2f) + 1f) / ((float)Math.Pow(1.01078f, Math.Min(hardeners, 300)) + (Math.Max(hardeners - 300, 0) * .05f) + 1f) * PassiveRegenModifier) * passiveRegenFactor) * PowerScalePRModifier), 2);
                 MinimumPassiveRegen = MaxEnergy * 0.005f;
                 
                 //If the current passive regen is below what the minimum passive regen is, set it to the minimum
@@ -331,13 +333,13 @@ namespace AdvShields
                 {
                     PassiveRegen = 50;
                 }
-                EnergyBeforeMods = (float)Math.Abs((float)Math.Round((((laserNode.GetMaximumEnergy() * maxEnergyFactor * PassiveOnOffHChange) * BaseHealthModifier) * PowerScaleHealthModifier), 2));
+                EnergyBeforeMods = (float)Math.Abs((float)Math.Round((((dSNode.GetMaximumEnergy() * maxEnergyFactor * PassiveOnOffHChange) * BaseHealthModifier) * PowerScaleHealthModifier), 2));
                 HealthLossFromMods = EnergyBeforeMods - Energy; //this is how the UI shows how much health has been lost through doublers and destabs. I'll fix the redundancy later :P
                 ArmorClassDifference = ((float)Math.Round(ArmorClass - (float)Math.Round((BaseShieldArmorClass / (MaxEnergy / Energy) * PassiveOnOffACChange * armorClassFactor) + PowerScaleACModifier, 1), 1)); //Same, for armour class
                 PassiveRegenDifference = ((float)Math.Round(PassiveRegen - (float)Math.Round((float)((((MaxEnergy * 0.01f) + 1f) * PassiveRegenModifier) * passiveRegenFactor) * PowerScalePRModifier, 2), 2)); //Same, for passive regen
-                HealthFromPowerScale = ((float)Math.Round((((laserNode.GetMaximumEnergy() * maxEnergyFactor / ((float)Math.Pow(destabilisers, 1.1134) / 900f + 1f) / ((float)Math.Pow(doublers, 1.1134) / 900f + 1f) * PassiveOnOffHChange) * BaseHealthModifier) * PowerScaleHealthModifier), 2) - (float)Math.Round((((laserNode.GetMaximumEnergy() * maxEnergyFactor / ((float)Math.Pow(destabilisers, 1.1134) / 900f + 1f) / ((float)Math.Pow(doublers, 1.1134) / 900f + 1f) * PassiveOnOffHChange) * BaseHealthModifier)), 2)); //This figures out how much health is being added by the power scale specifically, for UI.
-                ACFromPowerScale = (float)Math.Abs(((float)Math.Round(((BaseShieldArmorClass + (DoublersACFactor / 2) - DestbalisersACFactor) / (MaxEnergy / Energy) * PassiveOnOffACChange * armorClassFactor) + PowerScaleACModifier, 1) - (float)Math.Round(((BaseShieldArmorClass + (DoublersACFactor / 2) - DestbalisersACFactor) / (MaxEnergy / Energy) * PassiveOnOffACChange * armorClassFactor), 1))); //This figures out how much armor class is being added by the power scale specifically, for UI.
-                PRFromPowerScale = (float)Math.Abs(((float)Math.Round((float)(((((MaxEnergy * 0.01f) + 1f) * ((float)Math.Pow(1.01312f, Math.Min(destabilisers, 300)) + (Math.Max(destabilisers - 300, 0) * 1.2f) + 1f) / ((float)Math.Pow(1.01078f, Math.Min(doublers, 300)) + (Math.Max(doublers - 300, 0) * .05f) + 1f) * PassiveRegenModifier) * passiveRegenFactor) * PowerScalePRModifier), 2) - (float)Math.Round((float)(((((MaxEnergy * 0.01f) + 1f) * ((float)Math.Pow(1.01312f, Math.Min(destabilisers, 300)) + (Math.Max(destabilisers - 300, 0) * 1.2f) + 1f) / ((float)Math.Pow(1.01078f, Math.Min(doublers, 300)) + (Math.Max(doublers - 300, 0) * .05f) + 1f) * PassiveRegenModifier) * passiveRegenFactor)), 2))); //This figures out how much passive regen is being added by the power scale specifically, for UI.
+                HealthFromPowerScale = ((float)Math.Round((((dSNode.GetMaximumEnergy() * maxEnergyFactor / ((float)Math.Pow(transformers, 1.1134) / 900f + 1f) / ((float)Math.Pow(hardeners, 1.1134) / 900f + 1f) * PassiveOnOffHChange) * BaseHealthModifier) * PowerScaleHealthModifier), 2) - (float)Math.Round((((dSNode.GetMaximumEnergy() * maxEnergyFactor / ((float)Math.Pow(transformers, 1.1134) / 900f + 1f) / ((float)Math.Pow(hardeners, 1.1134) / 900f + 1f) * PassiveOnOffHChange) * BaseHealthModifier)), 2)); //This figures out how much health is being added by the power scale specifically, for UI.
+                ACFromPowerScale = (float)Math.Abs(((float)Math.Round(((BaseShieldArmorClass + (HardenersACFactor / 2) - TransformersACFactor) / (MaxEnergy / Energy) * PassiveOnOffACChange * armorClassFactor) + PowerScaleACModifier, 1) - (float)Math.Round(((BaseShieldArmorClass + (HardenersACFactor / 2) - TransformersACFactor) / (MaxEnergy / Energy) * PassiveOnOffACChange * armorClassFactor), 1))); //This figures out how much armor class is being added by the power scale specifically, for UI.
+                PRFromPowerScale = (float)Math.Abs(((float)Math.Round((float)(((((MaxEnergy * 0.01f) + 1f) * ((float)Math.Pow(1.01312f, Math.Min(transformers, 300)) + (Math.Max(transformers - 300, 0) * 1.2f) + 1f) / ((float)Math.Pow(1.01078f, Math.Min(hardeners, 300)) + (Math.Max(hardeners - 300, 0) * .05f) + 1f) * PassiveRegenModifier) * passiveRegenFactor) * PowerScalePRModifier), 2) - (float)Math.Round((float)(((((MaxEnergy * 0.01f) + 1f) * ((float)Math.Pow(1.01312f, Math.Min(transformers, 300)) + (Math.Max(transformers - 300, 0) * 1.2f) + 1f) / ((float)Math.Pow(1.01078f, Math.Min(hardeners, 300)) + (Math.Max(hardeners - 300, 0) * .05f) + 1f) * PassiveRegenModifier) * passiveRegenFactor)), 2))); //This figures out how much passive regen is being added by the power scale specifically, for UI.
 
                 //next two factors are outdated UI things
                 if ((PassiveRegen <= 1000) & (PassiveRegenDifference <= 50))
@@ -356,7 +358,7 @@ namespace AdvShields
                 //the following 3 are small scaling effects, taking effect at 40 / 50 / 60. They have been tested to ensure that you are not losing any armour class at each step.
                 if (ArmorClass>40f)
                 {
-                    ArmorClass = (float)Math.Pow((float)Math.Round(((BaseShieldArmorClass + (DoublersACFactor / 2) - DestbalisersACFactor) / (MaxEnergy / Energy) * PassiveOnOffACChange * armorClassFactor) + PowerScaleACModifier, 1), 0.97f)+4.2f;
+                    ArmorClass = (float)Math.Pow((float)Math.Round(((BaseShieldArmorClass + (HardenersACFactor / 2) - TransformersACFactor) / (MaxEnergy / Energy) * PassiveOnOffACChange * armorClassFactor) + PowerScaleACModifier, 1), 0.97f)+4.2f;
                     if (ArmorClass < 40f)
                     {
                         ArmorClass = 40f;
@@ -364,7 +366,7 @@ namespace AdvShields
                 }
                 if (ArmorClass>50)
                 {
-                    ArmorClass = (float)Math.Pow((float)Math.Round(((BaseShieldArmorClass + (DoublersACFactor / 2) - DestbalisersACFactor) / (MaxEnergy / Energy) * PassiveOnOffACChange * armorClassFactor) + PowerScaleACModifier, 1), 0.91f)+14.84f;
+                    ArmorClass = (float)Math.Pow((float)Math.Round(((BaseShieldArmorClass + (HardenersACFactor / 2) - TransformersACFactor) / (MaxEnergy / Energy) * PassiveOnOffACChange * armorClassFactor) + PowerScaleACModifier, 1), 0.91f)+14.84f;
                     if (ArmorClass < 50)
                     {
                         ArmorClass = 50;
@@ -372,7 +374,7 @@ namespace AdvShields
                 }
                 if (ArmorClass > 60)
                 {
-                    ArmorClass = (float)Math.Pow((float)Math.Round(((BaseShieldArmorClass + (DoublersACFactor / 2) - DestbalisersACFactor) / (MaxEnergy / Energy) * PassiveOnOffACChange * armorClassFactor) + PowerScaleACModifier, 1), 0.85f) + 27.54f;
+                    ArmorClass = (float)Math.Pow((float)Math.Round(((BaseShieldArmorClass + (HardenersACFactor / 2) - TransformersACFactor) / (MaxEnergy / Energy) * PassiveOnOffACChange * armorClassFactor) + PowerScaleACModifier, 1), 0.85f) + 27.54f;
                      if (ArmorClass < 60)
                     {
                         ArmorClass = 60;
@@ -380,12 +382,42 @@ namespace AdvShields
                 }
                 WaitTime = (AdvShieldHandler.BaseWaitTime - WaitTimeModifier) + PowerScaleWaitTimeModifier;
                 WTFromPowerScale = PowerScaleWaitTimeModifier;
+
+                PowerReductionFromRectifiers = CalculatePowerReductionFromRectifiers(rectifiers, MaxEnergy);
+
             }
 
             /*
             public float GetCurrentHealth(float sustainedUnfactoredDamage) => (Energy - sustainedUnfactoredDamage) / SurfaceFactor;
             public float GetFactoredDamage(float unfactoredDamage) => unfactoredDamage / 2 * SurfaceFactor;
             */
+        }
+        private float CalculatePowerReductionFromRectifiers(int rectifiers, float maxEnergy)
+        {
+            float maxReduction = 0.5f;
+            float baseReduction = (rectifiers * 0.01f);
+            float adjustedReduction = baseReduction - (rectifiers * 0.003f);
+            if (rectifiers == 1) adjustedReduction = 0.01f;
+
+            // Scaling penalty for large systems
+            float penaltyStrength = 0.2f; // 20% less effective at maxEnergy = 3,000,000
+            float penaltyFactor = 1f;
+
+            if (maxEnergy > 50000f)
+            {
+                float t = Mathf.Clamp01((maxEnergy - 50000f) / (3000000f - 50000f));
+                penaltyFactor = 1f - t * penaltyStrength;
+            }
+
+            // Apply penalty
+            float finalReduction = adjustedReduction * penaltyFactor;
+            if (finalReduction > maxReduction) finalReduction = maxReduction;
+            if (ShieldType == "REGENERATOR") PowerReductionFromRectifiers = 1f - ((1f - PowerReductionFromRectifiers) * 1.25f);
+            PowerSavingFromRectifiersForUI = finalReduction * 100;
+            // Convert to multiplier (invert)
+            float powerReductionFromRectifiers = 1f - finalReduction;
+
+            return powerReductionFromRectifiers;
         }
     }
 }

@@ -4,6 +4,7 @@ using AdvShields.Models;
 using BrilliantSkies.Core.Logger;
 using BrilliantSkies.Modding;
 using HarmonyLib;
+using UnityEngine;
 
 namespace DomeShieldTwo
 {
@@ -18,9 +19,13 @@ namespace DomeShieldTwo
         /// </summary>
         public void OnLoad()
         {
+            AdvLogger.LogInfo("Loading Dome Shield Beta Test, Update 2. Does this match the the most recent version?");
             AdvLogger.LogWarning("Attempting to load the assets", LogOptions._AlertDevInGame);
-            StaticStorage.LoadAsset();
+            GameObject loaderObj = new GameObject("AssetLoader");
+            loaderObj.AddComponent<AssetLoader>();
+            //StaticStorage.LoadAsset();
             AdvLogger.LogWarning("Assets loaded!", LogOptions._AlertDevInGame);
+            
 
             AdvLogger.LogWarning("Attempting to setup harmony", LogOptions._AlertDevInGame);
             Harmony harmony = new Harmony("AdvShields_Patch");

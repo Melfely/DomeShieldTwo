@@ -78,6 +78,11 @@ using AdvShields;
 using BrilliantSkies.Ftd.Constructs.Modules.All.DebugAnnotations;
 using System.Runtime.CompilerServices;
 using BrilliantSkies.DataManagement.Vars;
+using HarmonyLib;
+using BrilliantSkies.Core.Timing.Internal;
+using MoonSharp.Interpreter.CoreLib;
+using UnityEngine.UIElements;
+using DomeShieldTwo.shieldblocksystem;
 
 
 
@@ -127,7 +132,7 @@ namespace AdvShields
 
         public AdvShieldVisualData VisualData { get; set; } = new AdvShieldVisualData(1u);
 
-        public LaserNode ConnectLaserNode { get; set; }
+        public DomeShieldNode ConnectShieldNode { get; set; }
 
         //public ShieldNode ConnectShieldNode { get; set; }
 
@@ -136,6 +141,8 @@ namespace AdvShields
         public VarIntClamp Priority { get; set; } = new VarIntClamp(0, -50, 50, NoLimitMode.None);
 
         public PowerUserData PriorityData { get; set; } = new PowerUserData(34852u);
+
+        public Transform ControllersTransform;
 
         /*public bool IsActive
         {
@@ -163,16 +170,18 @@ namespace AdvShields
         public override void BlockStart()
         {
             base.BlockStart();
+            if (StaticStorage.HasLoaded == false) StaticStorage.LoadAsset();
             GameObject gameObject = GameObject.Instantiate<GameObject>(StaticStorage.ShieldDomeObject);
             gameObject.transform.position = GameWorldPosition;
             gameObject.transform.rotation = GameWorldRotation;
             gameObject.transform.localPosition = Transforms.LocalToGlobal(Vector3.zero, GameWorldPosition, GameWorldRotation);
             gameObject.transform.localRotation = Transforms.LocalRotationToGlobalRotation(Quaternion.identity, GameWorldRotation);
+            ControllersTransform = gameObject.transform;
 
             carriedObject = CarryThisWithUs(gameObject, LevelOfDetail.Low);
 
             ShieldDome = gameObject.GetComponent<ShieldDomeBehaviour>();
-            ShieldDome.Initialize();
+            ShieldDome.Initialize(VisualData);
 
             /*ShieldStats = new AdvShieldStatus(this);*/
             ShieldHandler = new AdvShieldHandler(this);
@@ -196,6 +205,9 @@ namespace AdvShields
             activateCallback = new ActivateCallback(this);
             ShieldDataSetChangeAction();
             VisualDataSetChangeAction();
+            ShieldHandler.Shape.UpdateInfo();
+            ShieldDome.UpdateSizeInfo(ShieldData);
+            carriedObject.ObjectItself.transform.localPosition = LocalPosition + new Vector3(ShieldData.LocalPosX, ShieldData.LocalPosY, ShieldData.LocalPosZ);
         }
 
         public override void StateChanged(IBlockStateChange change)
@@ -241,7 +253,7 @@ namespace AdvShields
                 updater.FlagError(this, "Shield domes don't work if there are shield rings or shield projectors on the vehicle");
             }
 
-            ConnectLaserNode = LaserComponentSearch();
+            ConnectShieldNode = ShieldComponentSearch();
         }
 
         public override void PrepForDelete()
@@ -314,15 +326,16 @@ namespace AdvShields
             }
 
             tip.SetSpecial(UniqueTipType.Name, new ProTipSegment_TitleSubTitle("Shield dome", "Projects a defensive shield around itself"));
-            tip.Add(new ProTipSegment_TextAdjustable(500, string.Format("Total drive {0} (basic drive {1} and an external factor of {2})", driveAfterFactoring, ShieldData.ExcessDrive, ShieldData.ExternalDriveFactor)), Position.Middle);
-            if (flag_0) tip.Add(new ProTipSegment_TextAdjustable(500, string.Format("Charging, effective drive: {0}", Rounding.R2(currentStrength))), Position.Middle);
-            tip.Add(new ProTipSegment_TextAdjustable(500, text_0), Position.Middle);
-            tip.Add(new ProTipSegment_Text(400, $"SHIELD CLASS: {ShieldStats.ShieldType}"), Position.Middle);
-            tip.Add(new ProTipSegment_Text(400, $"Surface area {(int)ShieldHandler.Shape.SurfaceArea()} m2"), Position.Middle);
-            tip.Add(new ProTipSegment_Text(400, $"This shield dome has {(int)currentHealth}/{(int)ShieldStats.MaxEnergy} health"), Position.Middle);
-            tip.Add(new ProTipSegment_Text(400, $"This shield dome has {ShieldStats.ArmorClass} armor class (minimum 2)."), Position.Middle);
-            tip.Add(new ProTipSegment_Text(400, $"This shield dome has a passive regen of {ShieldStats.PassiveRegen} each second (Minimum 50, maximum 500000). Active regeneration takes {ShieldStats.WaitTime} to begin."), Position.Middle);
-            tip.Add(new ProTipSegment_Text(400, $"This shield dome has {ShieldStats.Doublers} Frequency Doublers and {ShieldStats.Destabilizers} Destabilizers attatched. See the stats page for more info."), Position.Middle);
+            tip.Add(new ProTipSegment_TextAdjustable(500, string.Format("Total drive {0} (basic drive {1} and an external factor of {2})", driveAfterFactoring, ShieldData.ExcessDrive, ShieldData.ExternalDriveFactor)), BrilliantSkies.Ui.Tips.Position.Middle);
+            if (flag_0) tip.Add(new ProTipSegment_TextAdjustable(500, string.Format("Charging, effective drive: {0}", Rounding.R2(currentStrength))), BrilliantSkies.Ui.Tips.Position.Middle);
+            tip.Add(new ProTipSegment_TextAdjustable(500, text_0), BrilliantSkies.Ui.Tips.Position.Middle);
+            tip.Add(new ProTipSegment_Text(400, $"SHIELD CLASS: {ShieldStats.ShieldType}"), BrilliantSkies.Ui.Tips.Position.Middle);
+            tip.Add(new ProTipSegment_Text(400, $"Surface area {(int)ShieldHandler.Shape.SurfaceArea()} m2"), BrilliantSkies.Ui.Tips.Position.Middle);
+            tip.Add(new ProTipSegment_Text(400, $"This shield dome has {(int)currentHealth}/{(int)ShieldStats.MaxEnergy} health"), BrilliantSkies.Ui.Tips.Position.Middle);
+            tip.Add(new ProTipSegment_Text(400, $"This shield dome has {ShieldStats.ArmorClass} armor class (minimum 2)."), BrilliantSkies.Ui.Tips.Position.Middle);
+            tip.Add(new ProTipSegment_Text(400, $"This shield dome has a passive regen of {ShieldStats.PassiveRegen} each second (Minimum 50, maximum 500000). Active regeneration takes {ShieldStats.WaitTime} to begin."), BrilliantSkies.Ui.Tips.Position.Middle);
+            tip.Add(new ProTipSegment_Text(400, $"This shield dome has {ShieldStats.Hardeners} Hardeners and {ShieldStats.Transformers} Transformers attatched. See the stats page for more info."), BrilliantSkies.Ui.Tips.Position.Middle);
+            tip.Add(new ProTipSegment_Text(400, $"This shield dome has {ShieldStats.Rectifiers} Rectifiers attatched. This is resulting in a {ShieldStats.PowerSavingFromRectifiersForUI}% decrease in power usage (50% effective during active regen and full health)"), BrilliantSkies.Ui.Tips.Position.Middle);
 
             tip.Add(new ProTipSegment_BarWithTextOnIt(400, text_1, progress));
             /*tip.Add(new ProTipSegment_BarWithTextOnIt(400, text_2, progress));*/
@@ -444,14 +457,15 @@ namespace AdvShields
             else if (ShieldHandler.CurrentDamageSustained <= 0)
             {
                 float driveAfterFactoring = GetExcessDriveAfterFactoring();
-                request.IdealPower = (float)((ShieldData.Length * ShieldData.Width * ShieldData.Height * 0.006f) + 200f) * (float)Math.Round(ShieldData.ExcessDrive / 2.25f + 0.5555f, 1) / ShieldCircleness;
-                PowerDrawDifference = (float)(((ShieldData.Length * ShieldData.Width * ShieldData.Height * 0.006f) + 200f * ShieldCircleness) + (ShieldStats.PassiveRegen * 1.5f)) - (float)((ShieldData.Length * ShieldData.Width * ShieldData.Height * 0.00499999988824129) + 200f * (float)Math.Round(ShieldData.ExcessDrive / 2.25f + 0.5555f, 1) * ShieldCircleness);
+                request.IdealPower = ((float)((ShieldData.Length * ShieldData.Width * ShieldData.Height * 0.006f) + 200f) * (float)Math.Round(ShieldData.ExcessDrive / 2.25f + 0.5555f, 1) / ShieldCircleness) * (1f - ((1f - ShieldStats.PowerReductionFromRectifiers * 0.5f)));
+                PowerDrawDifference = (float)(((ShieldData.Length * ShieldData.Width * ShieldData.Height * 0.006f) + 200f * ShieldCircleness) + (ShieldStats.PassiveRegen * 1.5f)) - (float)((ShieldData.Length * ShieldData.Width * ShieldData.Height * 0.00499999988824129) + 200f * (float)Math.Round(ShieldData.ExcessDrive / 2.25f + 0.5555f, 1) * ShieldCircleness) * (1f - ((1f - ShieldStats.PowerReductionFromRectifiers * 0.5f)));
             }
             else
             {
                 float driveAfterFactoring = GetExcessDriveAfterFactoring();
-                request.IdealPower = (float)(((ShieldData.Length * ShieldData.Width * ShieldData.Height * 0.006f) + 200f) + (ShieldStats.PassiveRegen * 1.5f) * (float)Math.Round(ShieldData.ExcessDrive / 2.25f + 0.5555f, 1) / ShieldCircleness);
-                PowerDrawDifference = (float)(((ShieldData.Length * ShieldData.Width * ShieldData.Height * 0.006f) + 200f) + (ShieldStats.PassiveRegen * 1.5f) * (float)Math.Round(ShieldData.ExcessDrive / 2.25f + 0.5555f, 1) * ShieldCircleness - (float)(((ShieldData.Length * ShieldData.Width * ShieldData.Height * 0.006f) + 200f) * (float)Math.Round(ShieldData.ExcessDrive / 2.25f + 0.5555f, 1) * ShieldCircleness));            }
+                request.IdealPower = ((float)(((ShieldData.Length * ShieldData.Width * ShieldData.Height * 0.006f) + 200f) + (ShieldStats.PassiveRegen * 1.5f) * (float)Math.Round(ShieldData.ExcessDrive / 2.25f + 0.5555f, 1) / ShieldCircleness)) * ShieldStats.PowerReductionFromRectifiers;
+                PowerDrawDifference = ((float)(((ShieldData.Length * ShieldData.Width * ShieldData.Height * 0.006f) + 200f) + (ShieldStats.PassiveRegen * 1.5f) * (float)Math.Round(ShieldData.ExcessDrive / 2.25f + 0.5555f, 1) * ShieldCircleness - (float)(((ShieldData.Length * ShieldData.Width * ShieldData.Height * 0.006f) + 200f) * (float)Math.Round(ShieldData.ExcessDrive / 2.25f + 0.5555f, 1) * ShieldCircleness))) * ShieldStats.PowerReductionFromRectifiers;            
+            }
         }
 
 
@@ -470,6 +484,7 @@ namespace AdvShields
         {
             ShieldStats.Update();
             ShieldHandler.Update(ShieldStats);
+            ChangeShieldVisualsBasedOnStats();
         }
 
         private void ShieldDataSetChangeAction()
@@ -487,40 +502,51 @@ namespace AdvShields
         {
             Material _material = carriedObject.ObjectItself.GetComponent<MeshRenderer>().material;
 
-            VisualData.AssembleSpeed.SetChangeAction((newValue, oldValue, type) => _material.SetFloat("_AssembleSpeed", newValue));
-            VisualData.Edge.SetChangeAction((newValue, oldValue, type) => _material.SetFloat("_Edge", newValue));
-            VisualData.Fresnel.SetChangeAction((newValue, oldValue, type) => _material.SetFloat("_Fresnel", newValue));
-            VisualData.SinWaveFactor.SetChangeAction((newValue, oldValue, type) => _material.SetFloat("_SinWaveFactor", newValue));
-            VisualData.SinWaveSpeed.SetChangeAction((newValue, oldValue, type) => _material.SetFloat("_SinWaveSpeed", newValue));
-            VisualData.SinWaveSize.SetChangeAction((newValue, oldValue, type) => _material.SetFloat("_SinWaveSize", newValue));
-            VisualData.BaseColor.SetChangeAction((newValue, oldValue, type) => _material.SetColor("_Color", newValue));
-            VisualData.GridColor.SetChangeAction((newValue, oldValue, type) => _material.SetColor("_GridColor", newValue));
+            VisualData.AssembleSpeed.SetChangeAction((newValue, oldValue, type) => _material.SetFloat("_ScrollSpeed", newValue));
+            VisualData.Edge.SetChangeAction((newValue, oldValue, type) => _material.SetFloat("_EdgeIntensity", newValue));
+            VisualData.Fresnel.SetChangeAction((newValue, oldValue, type) => _material.SetFloat("_FresnelPower", newValue));
+            VisualData.NoiseFactor.SetChangeAction((newValue, oldValue, type) => _material.SetFloat("_NoiseScale", newValue));
+            VisualData.StaticFlickerSpeed.SetChangeAction((newValue, oldValue, type) => _material.SetFloat("_StaticFlickerSpeed", newValue));
+            VisualData.SinWaveFactor.SetChangeAction((newValue, oldValue, type) => _material.SetFloat("_WaveFactor", newValue));
+            VisualData.SinWaveSpeed.SetChangeAction((newValue, oldValue, type) => _material.SetFloat("_WaveSpeed", newValue));
+            VisualData.SinWaveSize.SetChangeAction((newValue, oldValue, type) => _material.SetFloat("_WaveSize", newValue));
+            VisualData.BaseColor.SetChangeAction((newValue, oldValue, type) => _material.SetColor("_GridColor", newValue));
+            VisualData.GridColor.SetChangeAction((newValue, oldValue, type) => _material.SetColor("_WaveColor", newValue));
         }
 
-        private LaserNode LaserComponentSearch()
+        private void ChangeShieldVisualsBasedOnStats()
+        {
+            Material _material = carriedObject.ObjectItself.GetComponent<MeshRenderer>().material;
+
+            float FractionOfHealth = ShieldHandler.CurrentDamageSustained / ShieldStats.MaxEnergy;
+            //float InvertFraction = 1.0f - FractionOfHealth;
+            _material.SetFloat("_ShieldIntegrity", FractionOfHealth);
+        }
+
+        private DomeShieldNode ShieldComponentSearch()
         {
             Vector3i[] verificationPosition = SetVerificationPosition();
-            LaserNode ln = null;
+            DomeShieldNode sn = null;
 
             foreach (Vector3i vp in verificationPosition)
             {
                 Block b = GetConstructableOrSubConstructable().AllBasicsRestricted.GetAliveBlockViaLocalPosition(vp);
 
-                if (b is LaserConnector || b is LaserTransceiver)
+                if (b is DomeShieldConnector)
                 {
-                    LaserComponent lc = b as LaserComponent;
-                    ln = lc.Node;
+                    DomeShieldComponent sc = b as DomeShieldComponent;
+                    sn = sc.Node;
                     break;
                 }
-                else if (b is LaserMultipurpose)
+                else if (b is DomeShieldMultipurpose)
                 {
-                    LaserMultipurpose lm = b as LaserMultipurpose;
-                    ln = lm.Node;
+                    DomeShieldMultipurpose sm = b as DomeShieldMultipurpose;
+                    sn = sm.Node;
                     break;
                 }
             }
 
-            return ln;
+            return sn;
         }
 
         public void PlayShieldHit(Vector3 location)
