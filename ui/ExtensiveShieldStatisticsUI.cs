@@ -34,7 +34,7 @@ namespace AdvShields.UI
             //ScreenSegmentStandard standardSegment2 = CreateStandardSegment(InsertPosition.OnCursor);
             standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m((Func<AdvShieldProjector, string>)(I =>
             {
-                enumShieldClassSelection type = I.ShieldData.ShieldClass;
+                enumShieldClassSelection type = I.SettingsData.ShieldClass;
                 string str = "The class of this shield is <color=yellow>QuickHeal</color>. This class has the quickest active regen time, but all other stats suffer slight penalties. Best used on evasive craft that will rarely be hit.";
                 switch (type)
                 {
@@ -57,18 +57,21 @@ namespace AdvShields.UI
                 return str;
             }))));
             StringDisplay stringDisplay1 = standardSegment1.AddInterpretter(StringDisplay.Quick("<i>Basic Shield Stats:</i>"));
-            standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("The maximum health of this shield is <color=red>{0}</color>", (I.ShieldStats.MaxEnergy)))));
-            standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("The armor class of this shield is <color=red>{0}</color>", (I.ShieldStats.ArmorClass)))));
-            standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("The passive regeneration of this shield is <color=red>{0}</color> health per second.", (I.ShieldStats.PassiveRegen)))));
-            standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("The delay before active regeneration of this shield is <color=red>{0}</color> seconds. This means that the shield must not take damage (usually while off) for {0} seconds before the laser system will start 'firing', restoring the shield.", (I.ShieldStats.WaitTime)))));
+            standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("The maximum health of this shield is {0}", (I.ShieldStats.MaxHealth)))));
+            standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("The armor class of this shield is {0}", (I.ShieldStats.ArmourClass)))));
+            standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("The passive regeneration of this shield is {0} health per second.", (I.ShieldStats.PassiveRegen)))));
+            standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("The delay before active regeneration of this shield is {0} seconds. This means that the shield must not take damage (usually while off) for {0} seconds before the laser system will start 'firing', restoring the shield.", (I.ShieldStats.WaitTime)))));
             CreateSpace(0);
             StringDisplay stringDisplay2 = standardSegment1.AddInterpretter(StringDisplay.Quick("<i>Shield modifiers:</i>"));
-            standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("This shield currently has <color=red>{0}</color> frequncy doublers and <color=red>{1}</color> destabilizers. This changes the armor class of this shield by <color=yellow>{2}</color>, and changes the passive regeneration of the shield by <color=yellow>{3}</color>.", (I.ShieldStats.HardenersForUI), (I.ShieldStats.TransformersForUI), (I.ShieldStats.ArmorClassDifference), ((I.ShieldStats.PassiveRegenDifference))))));
-            standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("Together, these lower the health of the shield by <color=purple>{0}</color>.", (I.ShieldStats.HealthLossFromMods)))));
-            standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("Additionally, the current power scale of the shield is <color=red>{0}</color>. AFTER the above, this increases health by <color=green>{1}</color>, armor class by <color=green>{2}</color>, and passive regen by <color=green>{3}</color>. However, this increases the active regen wait time by <color=purple>{4}</color>, and increases the engine draw by <color=purple>{5}</color> while resting and <color=purple>{6}</color> during passive regeneration. Power scaling will favor the stats that the shield class already enhances; for example, power scaling the Armored class will mostly increase armor, while providing little benefit to health and passive regen.", (I.ShieldStats.PowerScale), (I.ShieldStats.HealthFromPowerScale), (I.ShieldStats.ACFromPowerScale), (I.ShieldStats.PRFromPowerScale), (I.ShieldStats.WTFromPowerScale), (I.RestingPDDFromPowerScale), (I.ActivePDDFromPowerScale)))));
+            standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("Before any modifiers, the base health of the shield is <color=red>{0}</color>, equal to the max energy of the system. A total of {1}% of the power is being routed to AC or regen, resulting in a health loss of {2}.", (I.Node.MaximumEnergy), (I.ShieldStats.CombinedRoutedPowerPercent), (I.ShieldStats.HealthLossFromRoutedPower)))));
+            standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("You currently have {0}% of the power being utilized for Armor Class. This is resulting in a increase of <color=green>{1}</color> AC to the shield, up from the base of {2}.", (I.SettingsData.ArmourPercent), (I.ShieldStats.ArmourIncrease), (I.ShieldStats.BaseArmourClass)))));
+            standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("You currently have {0}% of the power being utilized for Regeneration. This is resulting in a increase of <color=green>{1}</color> Passive regen to the shield, up from the base of {2}. During active regen, this number is multiplied by 10x.", (I.SettingsData.RegenPercent), (I.ShieldStats.RegenIncrease), (I.ShieldStats.BaseRegen)))));
+            standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("Together, these lower the health of the shield by <color=purple>{0}</color>.", (I.ShieldStats.HealthLossFromRoutedPower)))));
+            //standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("Additionally, the current power scale of the shield is <color=red>{0}</color>. AFTER the above, this increases health by <color=green>{1}</color>, armor class by <color=green>{2}</color>, and passive regen by <color=green>{3}</color>. However, this increases the active regen wait time by <color=purple>{4}</color>, and increases the engine draw by <color=purple>{5}</color> while resting and <color=purple>{6}</color> during passive regeneration. Power scaling will favor the stats that the shield class already enhances; for example, power scaling the Armored class will mostly increase armor, while providing little benefit to health and passive regen.", (I.ShieldStats.PowerScale), (I.ShieldStats.HealthFromPowerScale), (I.ShieldStats.ACFromPowerScale), (I.ShieldStats.PRFromPowerScale), (I.ShieldStats.WTFromPowerScale), (I.RestingPDDFromPowerScale), (I.ActivePDDFromPowerScale)))));
+            /*
             standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m((Func<AdvShieldProjector, string>)(I =>
             {
-                enumShieldClassSelection type = I.ShieldData.ShieldClass;
+                enumShieldClassSelection type = I.SettingsData.ShieldClass;
                 string str = "However, as a QuickHeal shield, the power scale<color= green> DECREASES </color> active wait time instead.";
                 switch (type)
                 {
@@ -90,6 +93,7 @@ namespace AdvShields.UI
                 }
                 return str;
             }))));
+            */
             CreateSpace(0);
             StringDisplay stringDisplay3 = standardSegment1.AddInterpretter(StringDisplay.Quick("<i>Engine / Power draw:</i>"));
             standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("The size of the shield creates a base power draw of <color=red>{0}</color>.", (I.BasePowerDrawUI)))));
@@ -97,7 +101,7 @@ namespace AdvShields.UI
             standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("While resting, the shield uses <color=red>{0}</color> engine power.", (I.RPDForUI)))));
             standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("While passive regeneration is occuring, the shield uses <color=red>{0}</color> engine power.", (I.APDForUI)))));
             standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("The shield is benefitting from a <color=green>{0}</color>% reduction in power use due to the circular shape of the shield.", (I.ShieldCircleness * 100) - 100))));
-            standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("The shield is also benefitting from a <color=green>{0}</color>% reduction in power use due to <color=red>{1}</color> active rectifiers. This bonus is increased by 25% if you are using the Regenerator type shield (you would see this bonus reflected in this stat page.", (I.ShieldStats.PowerSavingFromRectifiersForUI),(I.ShieldStats.Rectifiers)))));
+            standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("The shield is also benefitting from a <color=green>{0}</color>% reduction in power use due to <color=red>{1}%</color> of the energy being affected by Active Rectifiers. This bonus is increased by 25% if you are using the Regenerator type shield (you would see this bonus reflected in this stat page.", (I.ShieldStats.ActiveRectifierSavingsPercent),(I.ActiveRectifierPercent)))));
             CreateSpace(0);
             standardSegment1.SpaceBelow = 40f;
             standardSegment1.SpaceAbove = 40f;

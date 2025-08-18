@@ -74,7 +74,7 @@ namespace AdvShields.Behaviours
 
         }
 
-        public void UpdateSizeInfo(AdvShieldData data)
+        public void UpdateSizeInfo(AdvShieldTransformData data)
         {
             transform.localScale = new Vector3(data.Width, data.Height, data.Length);
         }

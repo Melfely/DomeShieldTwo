@@ -7,6 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="shieldblocksystem\**" />
+    <EmbeddedResource Remove="shieldblocksystem\**" />
+    <None Remove="shieldblocksystem\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Lib.Harmony" Version="2.3.6" />
   </ItemGroup>
 

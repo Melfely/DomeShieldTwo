@@ -36,7 +36,8 @@ using BrilliantSkies.Ftd.AdvancedCannons;
 using BrilliantSkies.Blocks.Shields.Ui;
 using BrilliantSkies.Ftd.Constructs.Modules.Main.Scuttling;
 using BrilliantSkies.Ftd.Modes.MainMenu.Ui;
-using DomeShieldTwo.shieldblocksystem;
+using DomeShieldTwo.newshieldblocksystem;
+using BrilliantSkies.Ftd.Avatar.Interact;
 namespace AdvShields
 {
     public static class CIL_Control
@@ -95,7 +96,7 @@ namespace AdvShields
         {
             foreach (AdvShieldProjector item in TypeStorage.GetObjects())
             {
-                if (item.ShieldData.IsShieldOn == enumShieldDomeState.Off) continue;
+                if (item.SettingsData.IsShieldOn == enumShieldDomeState.Off) continue;
 
                 Elipse elipse = item.ShieldHandler.Shape;
                 elipse.UpdateInfo();
@@ -109,6 +110,7 @@ namespace AdvShields
             }
         }
     }
+    //[HarmonyPatch(typeof(cInteract), "ObserveBlock")]
 
     [HarmonyPatch(typeof(ConstructSets), "LinkUpExternallyPriorToBlocksInitialising", new Type[] {})]
     internal class ConstructSetsPatch
@@ -127,7 +129,7 @@ namespace AdvShields
         {
             foreach (AdvShieldProjector item in TypeStorage.GetObjects())
             {
-                if (item.ShieldData.IsShieldOn == enumShieldDomeState.Off) continue;
+                if (item.SettingsData.IsShieldOn == enumShieldDomeState.Off) continue;
 
                 Elipse elipse = item.ShieldHandler.Shape;
                 //elipse.UpdateInfo();
@@ -484,7 +486,7 @@ namespace AdvShields
 
                 foreach (AdvShieldProjector item in TypeStorage.GetObjects())
                 {
-                    if (item.ShieldData.IsShieldOn == enumShieldDomeState.Off) continue;
+                    if (item.SettingsData.IsShieldOn == enumShieldDomeState.Off) continue;
 
                     Elipse elipse = item.ShieldHandler.Shape;
                     elipse.UpdateInfo();
@@ -518,7 +520,7 @@ namespace AdvShields
        { 
        foreach (AdvShieldProjector item in TypeStorage.GetObjects())
            {
-               if (item.ShieldData.IsShieldOn == enumShieldDomeState.Off) continue;
+               if (item.SettingsData.IsShieldOn == enumShieldDomeState.Off) continue;
 
                Elipse elipse = item.ShieldHandler.Shape;
                elipse.UpdateInfo();
@@ -551,7 +553,7 @@ namespace AdvShields
 
                 foreach (AdvShieldProjector item in TypeStorage.GetObjects())
                 {
-                    if (item.ShieldData.IsShieldOn == enumShieldDomeState.Off) continue;
+                    if (item.SettingsData.IsShieldOn == enumShieldDomeState.Off) continue;
 
                     Elipse elipse = item.ShieldHandler.Shape;
                     elipse.UpdateInfo();

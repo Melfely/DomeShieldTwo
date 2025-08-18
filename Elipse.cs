@@ -24,7 +24,7 @@ namespace AdvShields
 
         public void UpdateInfo()
         {
-            AdvShieldData d = _controller.ShieldData;
+            AdvShieldTransformData d = _controller.TransformData;
 
             Width = d.Width / 2;
             Height = d.Height / 2;

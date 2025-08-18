@@ -19,7 +19,8 @@ using BrilliantSkies.Modding;
 using BrilliantSkies.Core.Logger;
 using UnityEngine.UIElements;
 using BrilliantSkies.Ftd.Game.BattleOrchestration.AiPositioning;
-using DomeShieldTwo.shieldblocksystem;
+using DomeShieldTwo.newshieldblocksystem;
+using DomeShieldTwo;
 
 
 namespace AdvShields
@@ -64,7 +65,7 @@ namespace AdvShields
 
         public float GetCurrentHealth()
         {
-            return controller.ShieldStats.MaxEnergy - CurrentDamageSustained;
+            return controller.ShieldStats.MaxHealth - CurrentDamageSustained;
         }
 
         public AllConstruct GetC()
@@ -85,9 +86,9 @@ namespace AdvShields
 
             //Console.WriteLine(DD.GetType().ToString());
 
-            AdvShieldStatus stats = controller.ShieldStats;
+            AdvShieldStatusTwo stats = controller.ShieldStats;
 
-            float damage = DD.CalculateDamage(stats.ArmorClass, GetCurrentHealth(), controller.GameWorldPosition);
+            float damage = DD.CalculateDamage(stats.ArmourClass, GetCurrentHealth(), controller.GameWorldPosition);
             CurrentDamageSustained += damage * controller.SurfaceFactor;
 
             float magnitude;
@@ -110,13 +111,12 @@ namespace AdvShields
                 magnitude = damage / 300;
                 hitPosition = GridcastHit - controller.GameWorldPosition;
             }
-            float maxEnergy = stats.MaxEnergy;
-            float Energy = stats.Energy;
+            float maxEnergy = stats.MaxHealth;
             if (CurrentDamageSustained >= maxEnergy)
             {
                 ShieldDisabled = true;
                 CurrentDamageSustained = maxEnergy;
-                controller.ShieldData.IsShieldOn.Us = enumShieldDomeState.Off;
+                controller.SettingsData.IsShieldOn.Us = enumShieldDomeState.Off;
                 controller.ShieldDome.gameObject.GetComponent<MeshRenderer>().enabled = false;
             }
 
@@ -128,8 +128,8 @@ namespace AdvShields
         {
             TimeSinceLastHit = Time.time;
 
-            AdvShieldStatus stats = controller.ShieldStats;
-            float empdamage = dd.CalculateEmpDamage(GetCurrentHealth(), controller.ShieldStats.ShieldEmpSusceptibility, controller.ShieldStats.ShieldEmpResistivity, controller.ShieldStats.ShieldEmpDamageFactor);
+            AdvShieldStatusTwo stats = controller.ShieldStats;
+            float empdamage = dd.CalculateEmpDamage(GetCurrentHealth(), stats.ShieldEmpSusceptibility, stats.ShieldEmpResistivity, stats.ShieldEmpDamageFactor);
             CurrentDamageSustained += empdamage * controller.SurfaceFactor;
 
             float magnitude;
@@ -138,12 +138,11 @@ namespace AdvShields
             magnitude = empdamage / 300;
             hitPosition = GridcastHit - controller.GameWorldPosition;
 
-            float maxEnergy = stats.MaxEnergy;
-            float Energy = stats.Energy;
+            float maxEnergy = stats.MaxHealth;
             if (CurrentDamageSustained >= maxEnergy)
             {
                 CurrentDamageSustained = maxEnergy;
-                controller.ShieldData.IsShieldOn.Us = enumShieldDomeState.Off;
+                controller.SettingsData.IsShieldOn.Us = enumShieldDomeState.Off;
                 controller.ShieldDome.gameObject.GetComponent<MeshRenderer>().enabled = false;
             }
 
@@ -173,16 +172,16 @@ namespace AdvShields
         }
 
             // Existing code...
-            public void Update(AdvShieldStatus ShieldStats)
+            public void Update(AdvShieldStatusTwo ShieldStats)
             {
             if (CurrentDamageSustained == 0.0f) return;
-            if ((CurrentDamageSustained <= 0.0f) && (controller.ShieldData.IsShieldOn.Us == enumShieldDomeState.On))
+            if ((CurrentDamageSustained <= 0.0f) && (controller.SettingsData.IsShieldOn.Us == enumShieldDomeState.On))
             {
                 PassiveRegenText = "The shield is at full health, it is not regenerating.";
                 CurrentDamageSustained = 0.0f;
             }
 
-            if ((CurrentDamageSustained > 0.0f) && (controller.ShieldData.IsShieldOn.Us == enumShieldDomeState.On))
+            if ((CurrentDamageSustained > 0.0f) && (controller.SettingsData.IsShieldOn.Us == enumShieldDomeState.On))
             {
                 if (ShieldDisabled) return;
                 CurrentDamageSustained -= ShieldStats.PassiveRegen / 70 * Time.timeScale;
@@ -190,13 +189,13 @@ namespace AdvShields
                 PassiveRegenText = "Shield is using significant engine power to passively regenerate the shield";
             }
             if (Time.time - TimeSinceLastHit < ShieldStats.WaitTime) return;
-            DomeShieldNode shieldNode = controller.ConnectShieldNode;
+            DomeShieldNode shieldNode = controller.Node;
             if (shieldNode == null) return;
             //            if (laserNode.HasToWaitForCharge()) return;
-            if ((CurrentDamageSustained / ShieldStats.MaxEnergy >= (controller.ShieldData.ShieldReactivationPercent / 100)) && (controller.ShieldData.IsShieldOn.Us == enumShieldDomeState.Off))
+            if ((CurrentDamageSustained / ShieldStats.MaxHealth >= (controller.SettingsData.ShieldReactivationPercent / 100)) && (controller.SettingsData.IsShieldOn.Us == enumShieldDomeState.Off))
             {
-                controller.ShieldData.IsShieldOn.Us = enumShieldDomeState.On;
-                CurrentDamageSustained = controller.ShieldData.ShieldReactivationPercent / 100;
+                controller.SettingsData.IsShieldOn.Us = enumShieldDomeState.On;
+                CurrentDamageSustained = controller.SettingsData.ShieldReactivationPercent / 100;
                 AmountPassivelyRegenerated = 0;
                 ShieldDisabled = false;
                 controller.ShieldDome.gameObject.GetComponent<MeshRenderer>().enabled = true;
@@ -222,7 +221,7 @@ namespace AdvShields
             }*/
             if (CurrentDamageSustained <= 0.0f)
             {
-                controller.ShieldData.IsShieldOn.Us = enumShieldDomeState.On;
+                controller.SettingsData.IsShieldOn.Us = enumShieldDomeState.On;
                 CurrentDamageSustained = 0.0f;
                 ShieldDisabled = false;
                 controller.ShieldDome.gameObject.GetComponent<MeshRenderer>().enabled = true;

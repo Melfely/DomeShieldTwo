@@ -69,7 +69,7 @@ namespace AdvShields.UI
             ScreenSegmentStandardHorizontal horizontalSegment2 = CreateStandardHorizontalSegment();
             horizontalSegment2.SpaceBelow = 30f;
             horizontalSegment2.AddInterpretter(SubjectiveButton<AdvShieldProjector>.Quick(_focus, "Copy to clipboard", new ToolTip("Copy the shield settings to the clipboard", 200f), I => CopyPaster.Copy(I.VisualData)));
-            horizontalSegment2.AddInterpretter(SubjectiveButton<AdvShieldProjector>.Quick(_focus, "Paste from clipboard", new ToolTip("Paste shield settings from the clipboard", 200f), I => CopyPaster.Paste(I.VisualData))).FadeOut = M.m<AdvShieldProjector>(I => !CopyPaster.ReadyToPaste(I.ShieldData));
+            horizontalSegment2.AddInterpretter(SubjectiveButton<AdvShieldProjector>.Quick(_focus, "Paste from clipboard", new ToolTip("Paste shield settings from the clipboard", 200f), I => CopyPaster.Paste(I.VisualData))).FadeOut = M.m<AdvShieldProjector>(I => !CopyPaster.ReadyToPaste(I.SettingsData));
         }
     }
 }
