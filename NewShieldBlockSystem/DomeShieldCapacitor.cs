@@ -42,7 +42,8 @@ namespace DomeShieldTwo.newshieldblocksystem
         {
             base.FeelerFlowDown(feeler);
             feeler.ItemsFlownThrough++;
-            feeler.TotalCapacitorSize += (int)this.energyPerDSCapacitor;
+            feeler.TotalCapacitorSize += (int)this.ThisCapacitorSize;
+            feeler.TotalEnergyInBeam += (int)this.energyPerDSCapacitor;
         }
         protected override void AppendToolTip(ProTip tip)
         {

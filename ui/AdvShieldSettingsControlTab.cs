@@ -104,11 +104,12 @@ namespace DomeShieldTwo.ui
         {
             ScreenSegmentStandard standardSegment1 = CreateStandardSegment(InsertPosition.OnCursor);
             ScreenSegmentStandard standardSegment2 = CreateStandardSegment(InsertPosition.OnCursor);
+            /*
             StringDisplay stringDisplay1 = standardSegment1.AddInterpretter(StringDisplay.Quick("<i>Select if the shield is on or off:</i>"));
             standardSegment1.AddInterpretter(new DropDown<AdvShieldSettingsData, enumShieldDomeState>(_focus.SettingsData, _shieldOnOffDropDown, (I, b) => I.IsShieldOn == b, (I, b) => I.IsShieldOn.Us = b));
             standardSegment1.AddInterpretter(new Blank(30f));
-            StringDisplay stringDisplay2 = standardSegment1.AddInterpretter(StringDisplay.Quick("<i>Select shield class and if passive regen is on:</i>"));
-            standardSegment1.AddInterpretter(new DropDown<AdvShieldSettingsData, enumPassiveRegenState>(_focus.SettingsData, _shieldPRDropDown, (I, b) => I.IsPassiveOn == b, (I, b) => I.IsPassiveOn.Us = b));
+            */
+            StringDisplay stringDisplay2 = standardSegment1.AddInterpretter(StringDisplay.Quick("<i>Select shield class:</i>"));
             standardSegment1.AddInterpretter(new DropDown<AdvShieldSettingsData, enumShieldClassSelection>(_focus.SettingsData, _shieldClassSelection, (I, b) => I.ShieldClass == b, (I, b) => I.ShieldClass.Us = b));
             standardSegment1.AddInterpretter(Quick.SliderNub(_focus.SettingsData, t => "ShieldReactivationPercent", null));
             standardSegment1.AddInterpretter(Quick.SliderNub(_focus.SettingsData, t => "ExcessDrive", null));
@@ -120,8 +121,9 @@ namespace DomeShieldTwo.ui
             standardSegment1.AddInterpretter(new Blank(30f));
             standardSegment1.SpaceBelow = 40f;
             standardSegment1.SpaceAbove = 40f;
-            stringDisplay1.Justify = new TextAnchor?(TextAnchor.UpperLeft);
+            //stringDisplay1.Justify = new TextAnchor?(TextAnchor.UpperLeft);
             stringDisplay2.Justify = new TextAnchor?(TextAnchor.UpperLeft);
+            stringDisplay3.Justify = new TextAnchor?(TextAnchor.UpperLeft);
 
             CreateSpace(0);
             standardSegment2.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("External drive factor is {0} so combined strength is {1}", I.SettingsData.ExternalDriveFactor, Rounding.R2(I.GetExcessDriveAfterFactoring()))))).SetConditionalDisplayFunction(() => _focus.SettingsData.ExternalDriveFactor < 1.0);
@@ -134,6 +136,13 @@ namespace DomeShieldTwo.ui
                 float num1 = Rounding.R2(_focus.PowerUse.FractionOfPowerRequestedThatWasProvided * 100f);
                 float num2 = Rounding.R2(ShieldProjector.GetDisruptionRegenerationRate(powerUse));
                 return string.Format("Power use: {0} (working at {1}%). Disruption strength recovery at full power: {2}/s", powerUse, num1, num2);
+            }))));
+            standardSegment2.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m((Func<AdvShieldProjector, string>)(I =>
+            {
+                if (!_focus.ShieldStats.NotEnoughEnergy && _focus.SettingsData.IsShieldOn == enumShieldDomeState.On) return "<color=green>Shield is working normally.</color>";
+                else if (_focus.ShieldStats.NotEnoughEnergy && _focus.SettingsData.IsShieldOn == enumShieldDomeState.On) return "<color=yellow>SHIELD DOES NOT HAVE ENOUGH POWER!!! SHIELD DOME WEAKENED!!! </color>";
+                else if (_focus.SettingsData.IsShieldOn == enumShieldDomeState.On) return "<color=red> Shield has taken too much damage and has been disabled. Wait for recharge. </color>";
+                else return "You shouldn't be seeing this text";
             }))));
             /*
             standardSegment2.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m((Func<AdvShieldProjector, string>)(I =>

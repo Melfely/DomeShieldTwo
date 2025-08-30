@@ -1,5 +1,6 @@
 ﻿using AdvShields;
 using BrilliantSkies.Core.Timing;
+using DomeShieldTwo.NewShieldBlockSystem;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -40,7 +41,7 @@ namespace DomeShieldTwo.newshieldblocksystem
                     for (int j = 0; j < sPL.dSBeamInfo.Length; j++)
                     {
                         DomeShieldBeamInfo beamInfo = sPL.dSBeamInfo[j];
-                        num += Mathf.Min((float)beamInfo.TotalCapacitorSize * 0.05f * GameTimer.Instance.FixedDeltaTimeCache, 1);
+                        num += Mathf.Min((float)beamInfo.TotalEnergyInBeam * 0.05f * GameTimer.Instance.FixedDeltaTimeCache, 1);
                         num2 += beamInfo.MaxEnergy;
                     }
                 }
@@ -48,8 +49,6 @@ namespace DomeShieldTwo.newshieldblocksystem
                 request.IdealCalculationValue = num;
                 request.IdealPower = num * 0.05f / GameTimer.Instance.FixedDeltaTimeCache;
             }
-            
-            //Read this when you aren't sick
         }
         
         private void Use(IPowerRequestRecurring request)
@@ -63,7 +62,7 @@ namespace DomeShieldTwo.newshieldblocksystem
                 {
                     DomeShieldBeamInfo beamInfo = sPL.dSBeamInfo[j];
                     float energyShortage = 1;
-                    float num2 = (float)beamInfo.TotalCapacitorSize * 0.05f * request.DeltaTime;
+                    float num2 = (float)beamInfo.TotalEnergyInBeam * 0.05f * request.DeltaTime;
                     num2 = Mathf.Min(num2, num);
                     num2 = Mathf.Min(num2, energyShortage);
                     num -= num2;
@@ -80,7 +79,7 @@ namespace DomeShieldTwo.newshieldblocksystem
         public override void PriorToSendingOutFeelers()
         {
             this.dSPLs.Clear();
-            //this.DSELs.Clear();
+            this.matrixComputer = null;
             
         }
         /*
@@ -120,13 +119,13 @@ namespace DomeShieldTwo.newshieldblocksystem
                     for (int j = 0; j < dSPL.dSBeamInfo.Length; j++)
                     {
                         DomeShieldBeamInfo beamInfo = dSPL.dSBeamInfo[j];
-                        bool flag3 = beamInfo.TotalCapacitorSize > 0;
+                        bool flag3 = beamInfo.TotalEnergyInBeam > 0;
                         if (flag3)
                         {
                             this.LastCWEnergySum = 0f;
                         }
                         num2 += beamInfo.Hardeners;
-                        num3 += beamInfo.TotalCapacitorSize;
+                        num3 += beamInfo.TotalEnergyInBeam;
                         num4 += beamInfo.MaxEnergy;
                     }
                 }
@@ -170,6 +169,10 @@ namespace DomeShieldTwo.newshieldblocksystem
         private IPowerRequestRecurring _powerUse;
 
         public List<DomeShieldPowerLink> dSPLs = new List<DomeShieldPowerLink>();
+
+        public DomeShieldMatrixComputer? matrixComputer;
+
+        public string ConnectedCard = "None";
 
         //public List<DomeShieldEnergyLink> dSELs = new List<DomeShieldEnergyLink>();
 

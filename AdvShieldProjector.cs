@@ -226,15 +226,45 @@ namespace AdvShields
         public float GetPowerUsed()
         {
             int num = 0;
+            /*
             foreach (DomeShieldPowerLink shieldCoupler in this.Node.dSPLs)
             {
                 num += shieldCoupler.dSBeamInfo.Sum((DomeShieldBeamInfo beam) => beam.TotalCapacitorSize);
             }
-            return (float)num * 0.05f * GameTimer.Instance.FixedDeltaTimeCache;
+            int num2 = num;
+            */
+            foreach (DomeShieldPowerLink dSPL in this.Node.dSPLs)
+            {
+                foreach (DomeShieldBeamInfo beam in dSPL.dSBeamInfo)
+                {
+                    num += beam.PowerPerSec;
+                }
+            }
+            if (this.Node.matrixComputer != null)
+            {
+                num += this.Node.matrixComputer.PowerPerSec;
+            }
+            /*
+            foreach (DomeShieldPowerLink domeShieldPowerLink in this.Node.dSPLs)
+            {
+                foreach (DomeShieldBeamInfo beam in domeShieldPowerLink.dSBeamInfo)
+                {
+                    int beampercent = CalculatePercentOfMaxHealth(beam, num2);
+
+                }
+            }
+            */
+            return (float)num;
             //This needs to be fixed when we decide what couplers are changed to. We also need to decide if this is how we will do energy.
             //Notice that this is very similar to PumpEnergyPerSecond...
 
         }
+        /*
+        private int CalculatePercentOfMaxHealth(DomeShieldBeamInfo beam, int MaxPowerOfSystem)
+        {
+            beam.MaxEnergy
+        }
+        */
         public override float GetFirePower()
         {
             bool flag = this.Node == null;
@@ -261,7 +291,7 @@ namespace AdvShields
                             num3 += 1f; //beamInfo2.DamagePerSec;
                             //We need to find something to replace DamagePerSec for the sake of GetLaserPower!
                             //Or... see below
-                            num6 += beamInfo2.TotalCapacitorSize;
+                            num6 += beamInfo2.TotalEnergyInBeam;
                         }
                     }
                     float ac = DomeShieldConstants.GetAC(num5, num6, i == 0, num4);
@@ -380,8 +410,6 @@ namespace AdvShields
             SetShieldState(b1, false);
         }
 
-
-        
         protected override void RunControl(StimulusDirection stimDirection)
         {
             if (stimDirection == StimulusDirection.Positive)
@@ -405,7 +433,7 @@ namespace AdvShields
         
         public override BlockTechInfo GetTechInfo()
         {
-            return new BlockTechInfo().AddStatement("Shields have a reduction in reflect effectiveness when moving at high speeds").AddStatement("Shield Domes cannot run when Shield Rings or Shield Projectors are present on your vehicle");
+            return new BlockTechInfo().AddStatement("Only one shield dome is allowed per vehicle.");
         }
         protected override void AppendToolTip(ProTip tip)
         {
@@ -426,8 +454,8 @@ namespace AdvShields
             /*string text_2 = $"This shield dome has {(int)currentHealth}/{(int)ShieldStats.MaxEnergy} health";*/
             if (ShieldHandler.CurrentDamageSustained > 0.0f)
             {
-                float secondsSinceLastHit = UnityEngine.Time.time - ShieldHandler.TimeSinceLastHit;
-                float timeRemaining = ShieldStats.WaitTime - secondsSinceLastHit;
+                float secondsSinceLastHit = ShieldHandler.TimeSinceLastHit;
+                float timeRemaining = ShieldStats.ActualWaitTime - secondsSinceLastHit;
                 if (timeRemaining <= 0.0f)
                 {
                     text_1 = $"Shield is recharging, {currentHealth / ShieldStats.MaxHealth * 100:F1} % complete.";
@@ -435,7 +463,7 @@ namespace AdvShields
                 else
                 {
                     text_1 = $"Time until recharge: {timeRemaining:F1}s";
-                    progress = Mathf.Clamp01(Mathf.SmoothStep(0, 1, secondsSinceLastHit / ShieldStats.WaitTime));
+                    progress = Mathf.Clamp01(Mathf.SmoothStep(0, 1, secondsSinceLastHit / ShieldStats.ActualWaitTime));
                 }
             }
             int num = 500;
@@ -450,7 +478,8 @@ namespace AdvShields
             tip.Add(new ProTipSegment_Text(400, $"This shield dome has {ShieldStats.ArmourClass} armor class (minimum 2)."), BrilliantSkies.Ui.Tips.Position.Middle);
             tip.Add(new ProTipSegment_Text(400, $"This shield dome has a passive regen of {ShieldStats.PassiveRegen} each second. " /* (Minimum 50, maximum 500000).*/ + "Active regeneration takes {ShieldStats.WaitTime} to begin."), BrilliantSkies.Ui.Tips.Position.Middle);
             tip.Add(new ProTipSegment_Text(400, $"This shield dome has {ShieldStats.Hardeners} Hardeners and {ShieldStats.Transformers} Transformers attatched. See the stats page for more info."), BrilliantSkies.Ui.Tips.Position.Middle);
-            tip.Add(new ProTipSegment_Text(400, $"This shield dome has {ActiveRectifierPercent}% of its energy affected by Active Rectifiers. This is resulting in a {ShieldStats.ActiveRectifierSavingsPercent}% decrease in power usage (50% effective during active regen and full health)"), BrilliantSkies.Ui.Tips.Position.Middle);
+            if (Node.ConnectedCard.ToLower() != "none") tip.Add(new ProTipSegment_Text(400, $"This shield has a matrix computer with a {Node.ConnectedCard} card attached."), BrilliantSkies.Ui.Tips.Position.Middle);
+            //tip.Add(new ProTipSegment_Text(400, $"This shield dome has {ActiveRectifierPercent}% of its energy affected by Active Rectifiers. This is resulting in a {ShieldStats.ActiveRectifierSavingsPercent}% decrease in power usage (50% effective during active regen and full health)"), BrilliantSkies.Ui.Tips.Position.Middle);
 
             tip.Add(new ProTipSegment_BarWithTextOnIt(400, text_1, progress));
             /*tip.Add(new ProTipSegment_BarWithTextOnIt(400, text_2, progress));*/
@@ -490,7 +519,7 @@ namespace AdvShields
                             //num3 += beamInfo2.DamagePerSec;
                             num4 += (float)beamInfo2.PowerPerSec;
                             //num5 += beamInfo2.GetHealthThisFrame();
-                            num7 += beamInfo2.TotalCapacitorSize;
+                            num7 += beamInfo2.TotalEnergyInBeam;
                         }
                     }
                 }
@@ -537,7 +566,6 @@ namespace AdvShields
             new UI.AdvShieldUi(this).ActivateGui(GuiActivateType.Stack);
             //new DomeShieldSystemUI(this).ActivateGui(GuiActivateType.Stack);
         }
-
 
         public virtual Vector3i[] SetVerificationPosition()
         {
@@ -626,7 +654,7 @@ namespace AdvShields
                     ShieldCircleness = (float)Math.Abs(num4 - 1.25f) + 1;
                 }
             }
-
+            float power = GetPowerUsed();
             BasePowerDrawUI = (float)((TransformData.Length * TransformData.Width * TransformData.Height * 0.006f) + 200f);
             RPDForUI = (float)((TransformData.Length * TransformData.Width * TransformData.Height * 0.006f) + 200f) * (float)Math.Round(SettingsData.ExcessDrive / 2.25f + 0.5555f, 1) / ShieldCircleness;
             APDForUI = (float)(((TransformData.Length * TransformData.Width * TransformData.Height * 0.006f) + 200f) + (ShieldStats.PassiveRegen * 1.5f) * (float)Math.Round(SettingsData.ExcessDrive / 2.25f + 0.5555f, 1) / ShieldCircleness);
@@ -647,14 +675,20 @@ namespace AdvShields
             else if (ShieldHandler.CurrentDamageSustained <= 0)
             {
                 float driveAfterFactoring = GetExcessDriveAfterFactoring();
+                /*
                 request.IdealPower = ((float)((TransformData.Length * TransformData.Width * TransformData.Height * 0.006f) + 200f) * (float)Math.Round(SettingsData.ExcessDrive / 2.25f + 0.5555f, 1) / ShieldCircleness) * (1f - ((1f - ShieldStats.ActiveRectifierSavingsPercent * 0.5f)));
                 PowerDrawDifference = (float)(((TransformData.Length * TransformData.Width * TransformData.Height * 0.006f) + 200f * ShieldCircleness) + (ShieldStats.PassiveRegen * 1.5f)) - (float)((TransformData.Length * TransformData.Width * TransformData.Height * 0.00499999988824129) + 200f * (float)Math.Round(SettingsData.ExcessDrive / 2.25f + 0.5555f, 1) * ShieldCircleness) * (1f - ((1f - ShieldStats.ActiveRectifierSavingsPercent * 0.5f)));
+                */
+                request.IdealPower = power;
             }
             else
             {
                 float driveAfterFactoring = GetExcessDriveAfterFactoring();
+                request.IdealPower = power;
+                /*
                 request.IdealPower = ((float)(((TransformData.Length * TransformData.Width * TransformData.Height * 0.006f) + 200f) + (ShieldStats.PassiveRegen * 1.5f) * (float)Math.Round(SettingsData.ExcessDrive / 2.25f + 0.5555f, 1) / ShieldCircleness)) * ShieldStats.ActiveRectifierSavingsPercent;
-                PowerDrawDifference = ((float)(((TransformData.Length * TransformData.Width * TransformData.Height * 0.006f) + 200f) + (ShieldStats.PassiveRegen * 1.5f) * (float)Math.Round(SettingsData.ExcessDrive / 2.25f + 0.5555f, 1) * ShieldCircleness - (float)(((TransformData.Length * TransformData.Width * TransformData.Height * 0.006f) + 200f) * (float)Math.Round(SettingsData.ExcessDrive / 2.25f + 0.5555f, 1) * ShieldCircleness))) * ShieldStats.ActiveRectifierSavingsPercent;            
+                PowerDrawDifference = ((float)(((TransformData.Length * TransformData.Width * TransformData.Height * 0.006f) + 200f) + (ShieldStats.PassiveRegen * 1.5f) * (float)Math.Round(SettingsData.ExcessDrive / 2.25f + 0.5555f, 1) * ShieldCircleness - (float)(((TransformData.Length * TransformData.Width * TransformData.Height * 0.006f) + 200f) * (float)Math.Round(SettingsData.ExcessDrive / 2.25f + 0.5555f, 1) * ShieldCircleness))) * ShieldStats.ActiveRectifierSavingsPercent;
+                */
             }
         }
 

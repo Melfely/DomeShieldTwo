@@ -42,6 +42,7 @@ namespace DomeShieldTwo.newshieldblocksystem
         {
             base.Node.dSPLs.Add(this);
             feeler.CurrentDSPL = this;
+            feeler.ItemsFlownThrough++;
         }
         protected override void AppendToolTip(ProTip tip)
         {
@@ -49,9 +50,13 @@ namespace DomeShieldTwo.newshieldblocksystem
             base.AppendToolTip(tip);
             tip.SetSpecial_Name(DomeShieldPowerLink._locFile.Get("SpecialName", "Dome Shield Power Link", true), DomeShieldPowerLink._locFile.Get("SpecialDescription", "Connects dome shield cavities and modifiers to the Hardpoint. Components attatched to this link will use Engine power.", true));
             int num = 400;
-            float num2 = 0f;
-            int num5 = 0;
-            int num99 = 0;
+            float PPS = 0f;
+            int hardeners = 0;
+            int transformers = 0;
+            int overchargers = 0;
+            int ARs = 0;
+            int spoofers = 0;
+            int LBs = 0;
             for (int i = 0; i < 6; i++)
             {
                 DomeShieldBeamInfo beamInfo = this.dSBeamInfo[i];
@@ -64,18 +69,27 @@ namespace DomeShieldTwo.newshieldblocksystem
                     Mathf.Round(beamInfo.MaxEnergy).ToString()
                     });
                     tip.Add(Position.Middle, new ProTipSegment_Text(num, text));
-                    num2 += (float)beamInfo.PowerPerSec;
+                    PPS += (float)beamInfo.PowerPerSec;
                     /*
                     num3 += beamInfo.DamagePerSec;
                     num4 += beamInfo.GetDamageThisFrame();
                     */
-                    num5 += beamInfo.Hardeners;
-                    num99 += beamInfo.Transformers;
+                    hardeners += beamInfo.Hardeners;
+                    transformers += beamInfo.Transformers;
+                    overchargers += beamInfo.Overchargers;
+                    ARs += beamInfo.Rectifiers;
+                    spoofers += beamInfo.Spoofers;
+                    LBs += beamInfo.TotalBlocks;
                 }
             }
-            tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldPowerLink._locFile.Format("Tip_PowerUse", "Power use: <<{0}>>", new object[] { num2 })));
-            tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldPowerLink._locFile.Format("Tip_Hardeners", "Hardeners: <<{0}>>", new object[] { num5 })));
-            tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldPowerLink._locFile.Format("Tip_Transformers", "Transformers: <<{0}>>", new object[] { num99 })));
+            tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldPowerLink._locFile.Format("Tip_PowerUse", "Power use: <<{0}>>", new object[] { PPS })));
+            tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldPowerLink._locFile.Format("Tip_Hardeners", "Hardeners: <<{0}>>", new object[] { hardeners })));
+            tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldPowerLink._locFile.Format("Tip_Transformers", "Transformers: <<{0}>>", new object[] { transformers })));
+            tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldPowerLink._locFile.Format("Tip_Overchargers", "Overchargers: <<{0}>>", new object[] { overchargers })));
+            tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldPowerLink._locFile.Format("Tip_ARs", "Active Rectifiers: <<{0}>>", new object[] { ARs })));
+            tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldPowerLink._locFile.Format("Tip_Overchargers", "Spoofers: <<{0}>>", new object[] { spoofers })));
+            if (LBs / 3 < spoofers) tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldPowerLink._locFile.Format("Tip_too many spoofs", "<color=yellow>You have more spoofers connected to this power link than blocks they would effect, wasting energy!</color>")));
+
 
             //Have fun rewriting this one.
             //I did, thank you very much.
@@ -93,7 +107,7 @@ namespace DomeShieldTwo.newshieldblocksystem
         public override void InspectFeelerAfterDirection(DomeShieldFeeler feeler, Vector3i localDirection, int index)
         {
             DomeShieldBeamInfo dSBeamInfo = this.dSBeamInfo[index];
-            base.Node.MaximumEnergy += dSBeamInfo.SetParts(feeler.TotalCapacitorSize, feeler.hardeners, feeler.transformers, feeler.rectifiers);
+            base.Node.MaximumEnergy += dSBeamInfo.SetParts(feeler);
             feeler.ResetPartsToZero();
             //This will need coming back to because of the replacement of FDs and DEs
             //We are calling FDs 'Shield Hardeners" and DEs "Shield Transformers"

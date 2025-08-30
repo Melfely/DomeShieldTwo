@@ -24,11 +24,12 @@ namespace DomeShieldTwo.newshieldblocksystem
         {
             base.FeelerFlowDown(feeler);
             feeler.rectifiers++;
+            feeler.ItemsFlownThrough++;
         }
         protected override void AppendToolTip(ProTip tip)
         {
             base.AppendToolTip(tip);
-            tip.SetSpecial_Name(DomeShieldActiveRectifier._locFile.Get("SpecialName", "Dome Shield Active Rectifier", true), DomeShieldActiveRectifier._locFile.Get("SpecialDescription", "The Active Rectifier increases the efficiency at which the shield draws power from the vehicle's engines, resulting in a reduced power cost overall. Active Rectifiers have no downside, but a high upfront cost. Unlike most parts, they are not directly affected by most shield classes, except for the Regenerator. Connect to couplers, cavities or other connected cavity components.", true));
+            tip.SetSpecial_Name(DomeShieldActiveRectifier._locFile.Get("SpecialName", "Dome Shield Active Rectifier", true), DomeShieldActiveRectifier._locFile.Get("SpecialDescription", "The Active Rectifier increases the efficiency at which the shield draws power from the vehicle's engines, resulting in a reduced power cost overall. Active Rectifiers have no downside, but a high upfront cost. Unlike most parts, they are not directly affected by most shield classes, except for the Regenerator. Connect to power links, capacitors or other connected components.", true));
         }
         public override string GetConnectionInstructions()
         {

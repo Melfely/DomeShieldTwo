@@ -38,10 +38,13 @@ namespace DomeShieldTwo.newshieldblocksystem
         //Skipped ShotsPerSec, not relevant here.
         public int PowerPerSec
         {
-            
             get
             {
-                return this.TotalCapacitorSize * (20 * GetPowerMultiplier());
+                float mult = GetPowerMultiplier();
+                float num = this.TotalCapacitorSize * (20 * mult);
+                num += (Spoofers * (300 * mult));
+                int num2 = Rounding.FloatToInt(num);
+                return num2;
             }
             //We can fine tune this number
         }
@@ -57,34 +60,44 @@ namespace DomeShieldTwo.newshieldblocksystem
         }
         //Skipped DamagePerSec, not relevant here.
 
-        public int GetPowerMultiplier()
+        public float GetPowerMultiplier()
         {
-            float multiplier = 1 * (GetOverchargerPowerMultiplier() * GetRegulatorPowerMultiplier());
-            Math.Round(multiplier, 0);
-            return (int)multiplier;
+            float multiplier = ((1 * GetOverchargerPowerMultiplier()) * GetRegulatorPowerMultiplier());
+            return multiplier;
         }
 
         private float GetOverchargerPowerMultiplier()
         {
-            float overchargers = (float)Overchargers;
-            if (Overchargers == 0) return 1;
-            else return 1f + ((overchargers * 1.15f) * (0.1f - ((float)Math.Pow(100 / overchargers, 0.1))));
+            float baseIncrease = (float)Overchargers * 1.1f;
+            float penalty = ((baseIncrease*1.83f) - Overchargers)-1;
+            float adjustedIncrease = baseIncrease - penalty;
+            if (Overchargers == 0) adjustedIncrease = 1;
+            if (Overchargers == 1) adjustedIncrease = 1.1f;
+            return adjustedIncrease;
+            //return 1f + ((overchargers * 1.1f) * (0.1f - ((float)Math.Pow(100 / overchargers, 0.1))));
+            //What on earth was I doing with this formula LMAO
         }
         private float GetRegulatorPowerMultiplier()
         {
-            float baseReduction = (Overchargers * 0.02f);
-            float adjustedReduction = baseReduction - (Overchargers * 0.003f);
-            if (Overchargers == 1) adjustedReduction = 0.02f;
-            return adjustedReduction;
+            float baseReduction = (Rectifiers * 0.02f);
+            float adjustedReduction = baseReduction - (Rectifiers * 0.003f);
+            float finalReduction = 1f - adjustedReduction;
+            if (Rectifiers == 1) finalReduction = 0.98f;
+            if (Rectifiers == 0) finalReduction = 1f;
+            return finalReduction;
         }
-        public float SetParts(float cavityCapacity, int hardeners, int transformers, int rectifiers)
+        public float SetParts(DomeShieldFeeler feeler)
         {
-            float num = cavityCapacity - this.MaxEnergy;
-            this.Hardeners = hardeners;
-            this.TotalCapacitorSize = (int)cavityCapacity;
-            this.Transformers = transformers;
-            this.Rectifiers = rectifiers;
-            this.MaxEnergy = cavityCapacity;
+            float num = feeler.TotalCapacitorSize - this.MaxEnergy;
+            this.Hardeners = feeler.hardeners;
+            this.TotalCapacitorSize = (int)feeler.TotalCapacitorSize;
+            this.TotalEnergyInBeam = (int)feeler.TotalEnergyInBeam;
+            this.TotalBlocks = feeler.ItemsFlownThrough;
+            this.Transformers = feeler.transformers;
+            this.Rectifiers = feeler.rectifiers;
+            this.MaxEnergy = feeler.TotalEnergyInBeam;
+            this.Overchargers = feeler.Overchargers;
+            this.Spoofers = feeler.Spoofers;
             return num;
             
             //Yeaaahhh... this one's gonna take some work. FrequencyDoublers and Destabalisers won't be used, but we can easily swap those out for int 'other thing'.
@@ -95,12 +108,14 @@ namespace DomeShieldTwo.newshieldblocksystem
         {
             this.Hardeners = 0;
             this.TotalCapacitorSize = 0;
+            this.TotalEnergyInBeam = 0;
             this.Transformers = 0;
             this.Rectifiers = 0;
             this.MaxEnergy = 0f;
             this.EnergyAvailablePerSecond = 0f;
+            this.TotalBlocks = 0;
+            this.Spoofers = 0;
             this.Overchargers = 0;
-            this.Regulators = 0;
             //We can add the new modifer blocks (what is replacing FD's and DE's) here.
         }
         //Skipped SetQSwitch, not relavent here. Though, should shield class be referenced here...?
@@ -116,13 +131,17 @@ namespace DomeShieldTwo.newshieldblocksystem
 
         public int TotalCapacitorSize;
 
+        public int TotalEnergyInBeam;
+
         public int Transformers;
 
         public int Rectifiers;
 
         public int Overchargers;
 
-        public int Regulators;
+        public int TotalBlocks;
+
+        public int Spoofers;
 
         //public LaserOutputRegulator Regulator;
         //Will we need a regulator?

@@ -29,7 +29,7 @@ namespace DomeShieldTwo.newshieldblocksystem
         protected override void AppendToolTip(ProTip tip)
         {
             base.AppendToolTip(tip);
-            tip.SetSpecial_Name(DomeShieldHardener._locFile.Get("SpecialName", "Dome Shield Hardener", true), DomeShieldHardener._locFile.Get("SpecialDescription", "Increases the density of the shield, which increases the armour class. Negatively impacts regeneration speed as the flow of electricity is affected by the density.  Connect to couplers, cavities or other connected cavity components.", true));
+            tip.SetSpecial_Name(DomeShieldHardener._locFile.Get("SpecialName", "Dome Shield Hardener", true), DomeShieldHardener._locFile.Get("SpecialDescription", "Increases the density of the shield, which increases the armour class. Negatively impacts regeneration speed as the flow of electricity is affected by the density. Connect to couplers, cavities or other connected cavity components.", true));
         }
         public override string GetConnectionInstructions()
         {
