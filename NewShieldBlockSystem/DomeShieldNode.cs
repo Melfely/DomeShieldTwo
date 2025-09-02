@@ -80,7 +80,6 @@ namespace DomeShieldTwo.newshieldblocksystem
         {
             this.dSPLs.Clear();
             this.matrixComputer = null;
-            
         }
         /*
         public override void AfterSendingOutFeelers()

@@ -37,7 +37,7 @@ namespace DomeShieldTwo.NewShieldBlockSystem
             CompAlreadyExists = false;
             base.FeelerFlowDown(feeler);
             base.Node.matrixComputer = this;
-            PowerPerSec = (int)base.Node.MaximumEnergy / 500;
+            PowerPerSec = (int)base.Node.MaximumEnergy / 250;
             if (PowerPerSec < 500) PowerPerSec = 500;
         }
         

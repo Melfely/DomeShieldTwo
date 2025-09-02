@@ -48,6 +48,24 @@ namespace DomeShieldTwo.newshieldblocksystem
             }
             //We can fine tune this number
         }
+        public int NoModCapPowerPerSec
+        {
+            get
+            {
+                return this.TotalCapacitorSize * 20;
+            }
+        }
+
+        public float CapModDifference
+        {
+            get
+            {
+                float mult = GetPowerMultiplier();
+                int num = this.TotalCapacitorSize * 20;
+                float num2 = this.TotalCapacitorSize * (20 * mult);
+                return num2 - num;
+            }
+        }
         public float HealthPerEnergy
         {
             
@@ -79,10 +97,10 @@ namespace DomeShieldTwo.newshieldblocksystem
         }
         private float GetRegulatorPowerMultiplier()
         {
-            float baseReduction = (Rectifiers * 0.02f);
-            float adjustedReduction = baseReduction - (Rectifiers * 0.003f);
+            float baseReduction = (Rectifiers * 0.05f);
+            float adjustedReduction = baseReduction - (Rectifiers * 0.006f);
             float finalReduction = 1f - adjustedReduction;
-            if (Rectifiers == 1) finalReduction = 0.98f;
+            if (Rectifiers == 1) finalReduction = 0.95f;
             if (Rectifiers == 0) finalReduction = 1f;
             return finalReduction;
         }

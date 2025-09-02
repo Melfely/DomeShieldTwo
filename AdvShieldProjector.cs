@@ -156,6 +156,8 @@ namespace AdvShields
 
         public float ActiveRectifierPercent;
 
+        public float ShieldSizePower = 0f;
+
         /*public bool IsActive
         {
             get
@@ -258,6 +260,46 @@ namespace AdvShields
             //This needs to be fixed when we decide what couplers are changed to. We also need to decide if this is how we will do energy.
             //Notice that this is very similar to PumpEnergyPerSecond...
 
+        }
+        public float GetNoModCapPowerUsed()
+        {
+            int num = 0;
+            foreach (DomeShieldPowerLink dSPL in this.Node.dSPLs)
+            {
+                foreach (DomeShieldBeamInfo beam in dSPL.dSBeamInfo)
+                {
+                    num += beam.NoModCapPowerPerSec;
+                }
+            }
+            return num;
+        }
+        public float TotalCapModDifference()
+        {
+            float num = 0;
+            foreach (DomeShieldPowerLink dSPL in this.Node.dSPLs)
+            {
+                foreach (DomeShieldBeamInfo beam in dSPL.dSBeamInfo)
+                {
+                    num += beam.CapModDifference;
+                }
+            }
+            return num;
+        }
+
+        public float TotalCapMult()
+        {
+            float num = 0;
+            int beams = 0;
+            foreach (DomeShieldPowerLink dSPL in this.Node.dSPLs)
+            {
+                foreach (DomeShieldBeamInfo beam in dSPL.dSBeamInfo)
+                {
+                    num += beam.GetPowerMultiplier();
+                    beams++;
+                }
+            }
+            return num / beams;
+            //Gonna need to double check that for sure
         }
         /*
         private int CalculatePercentOfMaxHealth(DomeShieldBeamInfo beam, int MaxPowerOfSystem)
@@ -467,18 +509,22 @@ namespace AdvShields
                 }
             }
             int num = 500;
-            tip.SetSpecial(UniqueTipType.Name, new ProTipSegment_TitleSubTitle("Shield dome", "Projects a defensive shield around itself. Press Q for more a lot of options."));
+            tip.SetSpecial(UniqueTipType.Name, new ProTipSegment_TitleSubTitle("Shield dome", "Projects a defensive shield around itself. Press Q for a lot of options."));
             this.AppendCavityStatsWithFirepower(tip, num);
             tip.Add(new ProTipSegment_TextAdjustable(500, string.Format("Total drive {0} (basic drive {1} and an external factor of {2})", driveAfterFactoring, SettingsData.ExcessDrive, SettingsData.ExternalDriveFactor)), BrilliantSkies.Ui.Tips.Position.Middle);
             if (flag_0) tip.Add(new ProTipSegment_TextAdjustable(500, string.Format("Charging, effective drive: {0}", Rounding.R2(currentStrength))), BrilliantSkies.Ui.Tips.Position.Middle);
             tip.Add(new ProTipSegment_TextAdjustable(500, text_0), BrilliantSkies.Ui.Tips.Position.Middle);
-            tip.Add(new ProTipSegment_Text(400, $"SHIELD CLASS: {SettingsData.ShieldClass}"), BrilliantSkies.Ui.Tips.Position.Middle);
+            //tip.Add(new ProTipSegment_Text(400, $"SHIELD CLASS: {SettingsData.ShieldClass}"), BrilliantSkies.Ui.Tips.Position.Middle);
             tip.Add(new ProTipSegment_Text(400, $"Surface area {(int)ShieldHandler.Shape.SurfaceArea()} m2"), BrilliantSkies.Ui.Tips.Position.Middle);
             tip.Add(new ProTipSegment_Text(400, $"This shield dome has {(int)currentHealth}/{(int)ShieldStats.MaxHealth} health"), BrilliantSkies.Ui.Tips.Position.Middle);
             tip.Add(new ProTipSegment_Text(400, $"This shield dome has {ShieldStats.ArmourClass} armor class (minimum 2)."), BrilliantSkies.Ui.Tips.Position.Middle);
-            tip.Add(new ProTipSegment_Text(400, $"This shield dome has a passive regen of {ShieldStats.PassiveRegen} each second. " /* (Minimum 50, maximum 500000).*/ + "Active regeneration takes {ShieldStats.WaitTime} to begin."), BrilliantSkies.Ui.Tips.Position.Middle);
+            tip.Add(new ProTipSegment_Text(400, $"This shield dome has a passive regen of {ShieldStats.PassiveRegen} each second. " /* (Minimum 50, maximum 500000).*/ + $"Active regeneration takes {ShieldStats.ActualWaitTime} to begin."), BrilliantSkies.Ui.Tips.Position.Middle);
             tip.Add(new ProTipSegment_Text(400, $"This shield dome has {ShieldStats.Hardeners} Hardeners and {ShieldStats.Transformers} Transformers attatched. See the stats page for more info."), BrilliantSkies.Ui.Tips.Position.Middle);
+            if (ShieldHandler.TimeAtFullHealth > 45) tip.Add(new ProTipSegment_Text(400, "<color=green>Shield has not taken any damage for a considerable time. Power use is divided by 10 until damage is taken again (this is a buff).</color>"), BrilliantSkies.Ui.Tips.Position.Middle);
             if (Node.ConnectedCard.ToLower() != "none") tip.Add(new ProTipSegment_Text(400, $"This shield has a matrix computer with a {Node.ConnectedCard} card attached."), BrilliantSkies.Ui.Tips.Position.Middle);
+            if (ShieldHandler.TargettedByContLaser) tip.Add(new ProTipSegment_Text(400, "<color=yellow>Shield is currently being attacked by a continuous laser. Regen capabilities are negatively affected.</color>"), BrilliantSkies.Ui.Tips.Position.Middle);
+            if (ShieldHandler.SufferingFromDisruptor) tip.Add(new ProTipSegment_Text(400, $"<color=red>Shield is currently suffering from disruption! This is severely impacting regeneration and armor class! They are multiplied by {1f-ShieldStats.DisruptionFactor}.</color>"), BrilliantSkies.Ui.Tips.Position.Middle);
+
             //tip.Add(new ProTipSegment_Text(400, $"This shield dome has {ActiveRectifierPercent}% of its energy affected by Active Rectifiers. This is resulting in a {ShieldStats.ActiveRectifierSavingsPercent}% decrease in power usage (50% effective during active regen and full health)"), BrilliantSkies.Ui.Tips.Position.Middle);
 
             tip.Add(new ProTipSegment_BarWithTextOnIt(400, text_1, progress));
@@ -655,36 +701,39 @@ namespace AdvShields
                 }
             }
             float power = GetPowerUsed();
+            ShieldSizePower = ((TransformData.Length + TransformData.Width + TransformData.Height) * 3);
             BasePowerDrawUI = (float)((TransformData.Length * TransformData.Width * TransformData.Height * 0.006f) + 200f);
             RPDForUI = (float)((TransformData.Length * TransformData.Width * TransformData.Height * 0.006f) + 200f) * (float)Math.Round(SettingsData.ExcessDrive / 2.25f + 0.5555f, 1) / ShieldCircleness;
             APDForUI = (float)(((TransformData.Length * TransformData.Width * TransformData.Height * 0.006f) + 200f) + (ShieldStats.PassiveRegen * 1.5f) * (float)Math.Round(SettingsData.ExcessDrive / 2.25f + 0.5555f, 1) / ShieldCircleness);
             RestingPDDFromPowerScale = ((float)((TransformData.Length * TransformData.Width * TransformData.Height * 0.006f) + 200f) * (float)Math.Round(SettingsData.ExcessDrive / 2.25f + 0.5555f, 1) / ShieldCircleness - (float)((TransformData.Length * TransformData.Width * TransformData.Height * 0.006f) + 200f) / ShieldCircleness);
             ActivePDDFromPowerScale = ((float)(((TransformData.Length * TransformData.Width * TransformData.Height * 0.006f) + 200f) + (ShieldStats.PassiveRegen * 1.5f) * (float)Math.Round(SettingsData.ExcessDrive / 2.25f + 0.5555f, 1) / ShieldCircleness) - (float)(((TransformData.Length * TransformData.Width * TransformData.Height * 0.006f) + 200f) + (ShieldStats.PassiveRegen * 1.5f) / ShieldCircleness));
-
             if (DoesConstructHaveOtherShields)
             {
                 request.IdealPower = 0f;
+                //We never figured this out. Whoopsies :P
             }
 
             else if (SettingsData.IsShieldOn == enumShieldDomeState.Off)
             {
                 request.IdealPower = 0f;
-                PowerDrawDifference = (float)(((TransformData.Length * TransformData.Width * TransformData.Height * 0.006f) +200f) + (ShieldStats.PassiveRegen * 1.5f)) - (float)((TransformData.Length * TransformData.Width * TransformData.Height * 0.00499999988824129) + 200f);
                 //these "PowerDrawDifference"s are how the UI shows you the difference in power draw that passive regeneration costs
             }
             else if (ShieldHandler.CurrentDamageSustained <= 0)
             {
-                float driveAfterFactoring = GetExcessDriveAfterFactoring();
                 /*
                 request.IdealPower = ((float)((TransformData.Length * TransformData.Width * TransformData.Height * 0.006f) + 200f) * (float)Math.Round(SettingsData.ExcessDrive / 2.25f + 0.5555f, 1) / ShieldCircleness) * (1f - ((1f - ShieldStats.ActiveRectifierSavingsPercent * 0.5f)));
                 PowerDrawDifference = (float)(((TransformData.Length * TransformData.Width * TransformData.Height * 0.006f) + 200f * ShieldCircleness) + (ShieldStats.PassiveRegen * 1.5f)) - (float)((TransformData.Length * TransformData.Width * TransformData.Height * 0.00499999988824129) + 200f * (float)Math.Round(SettingsData.ExcessDrive / 2.25f + 0.5555f, 1) * ShieldCircleness) * (1f - ((1f - ShieldStats.ActiveRectifierSavingsPercent * 0.5f)));
                 */
-                request.IdealPower = power;
+                request.IdealPower = power + ShieldSizePower / ShieldCircleness;
+                if (ShieldHandler.TimeAtFullHealth > 45) request.IdealPower /= 10;
+            }
+            else if (ShieldHandler.isActiveRegen)
+            {
+                request.IdealPower = power + ShieldSizePower * 2f / ShieldCircleness;
             }
             else
             {
-                float driveAfterFactoring = GetExcessDriveAfterFactoring();
-                request.IdealPower = power;
+                request.IdealPower = power + ShieldSizePower * 1.2f / ShieldCircleness;
                 /*
                 request.IdealPower = ((float)(((TransformData.Length * TransformData.Width * TransformData.Height * 0.006f) + 200f) + (ShieldStats.PassiveRegen * 1.5f) * (float)Math.Round(SettingsData.ExcessDrive / 2.25f + 0.5555f, 1) / ShieldCircleness)) * ShieldStats.ActiveRectifierSavingsPercent;
                 PowerDrawDifference = ((float)(((TransformData.Length * TransformData.Width * TransformData.Height * 0.006f) + 200f) + (ShieldStats.PassiveRegen * 1.5f) * (float)Math.Round(SettingsData.ExcessDrive / 2.25f + 0.5555f, 1) * ShieldCircleness - (float)(((TransformData.Length * TransformData.Width * TransformData.Height * 0.006f) + 200f) * (float)Math.Round(SettingsData.ExcessDrive / 2.25f + 0.5555f, 1) * ShieldCircleness))) * ShieldStats.ActiveRectifierSavingsPercent;

@@ -26,9 +26,10 @@ namespace AdvShields
 
         [Variable(3, "Shield type", "The type of the shield")]
         public Var<enumShieldDomeState> IsShieldOn { get; set; } = new Var<enumShieldDomeState>(enumShieldDomeState.On);
-
+        /*
         [Variable(4, "Shield class", "The class of the shield")]
         public Var<enumShieldClassSelection> ShieldClass { get; set; } = new Var<enumShieldClassSelection>(enumShieldClassSelection.QH);
+        */
 
         [Slider(5, "Armour: {0}%", "The % of energy diverted from health into Armour class", 0f, 50f, 0.1f, 300f)]
         public Var<float> ArmourPercent { get; set; } = new VarFloatClamp(10, 0, 50, NoLimitMode.None);

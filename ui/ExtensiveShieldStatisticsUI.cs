@@ -32,30 +32,32 @@ namespace AdvShields.UI
         {
             ScreenSegmentStandard standardSegment1 = CreateStandardSegment(InsertPosition.OnCursor);
             //ScreenSegmentStandard standardSegment2 = CreateStandardSegment(InsertPosition.OnCursor);
+            /*
             standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m((Func<AdvShieldProjector, string>)(I =>
             {
                 enumShieldClassSelection type = I.SettingsData.ShieldClass;
-                string str = "The class of this shield is <color=yellow>QuickHeal</color>. This class has the quickest active regen time, but all other stats suffer slight penalties. Best used on evasive craft that will rarely be hit.";
+                string str = "The class of this shield is <color=yellow>QuickHeal</color>. This class has the quickest active regen time, and the minimum time is lowered to 1 second (down from 5).";
                 switch (type)
                 {
                     case enumShieldClassSelection.QH:
-                        str = "The class of this shield is <color=yellow>QuickHeal</color>. This class has the quickest active regen time, but all other stats suffer slight penalties. Best used on evasive craft that will rarely be hit.";
+                        str = "The class of this shield is <color=yellow>QuickHeal</color>. This class has the quickest active regen time, and the minimum time is lowered to 1 second (down from 5).";
                         break;
                     case enumShieldClassSelection.AC:
-                        str = "The class of this shield is <color=red>Armored</color>. This class has by far the highest base armor class of all shields, but suffers greatly in regeneration. Best used when the shield is not expected to regenerate after going down.";
+                        str = "The class of this shield is <color=red>Armored</color>. This class has a higher armor class than the other shields, effectively reducing incoming damage.";
                         break;
                     case enumShieldClassSelection.HE:
-                        str = "The class of this shield is <color=purple>Healthy</color>. This class has significantly higher base health than any other shields, and takes less emp damage than the other shields. However, other stats suffer noticably. Best used against weapons with high armor penetration, as their penetrating capabilities will be wasted.";
+                        str = "The class of this shield is <color=purple>Healthy</color>. This class has double the base health of other shields (being factored in after ac / regen is calcualted).";
                         break;
                     case enumShieldClassSelection.GEN:
-                        str = "The class of this shield is <color=green>Generalist</color>. This class has decent buffs to health and armor class, and no debuffs to passive regen. None of the stats by themselves are the best, and power scaling is less useful. Best used as a balanced option when the threat is unknown or varied.";
+                        str = "The class of this shield is <color=green>Generalist</color>. This class has minor buffs to health, armor class, and regeneration.";
                         break;
                     case enumShieldClassSelection.REG:
-                        str = "The class of this shield is <color=cyan>Regenerator</color>. This class has incredible passive regen that can be brought to extreme numbers if powered properly. When used against craft with low DPS, you can become almost invincible. Beware, though; 20% reduced health, lowest base armor of all classes, and increased emp damage taken means that a strong burst can disable the shield instantly!!!";
+                        str = "The class of this shield is <color=cyan>Regenerator</color>. This class has stronger regeneration capabilities";
                         break;
                 }
                 return str;
             }))));
+            */
             StringDisplay stringDisplay1 = standardSegment1.AddInterpretter(StringDisplay.Quick("<i>Basic Shield Stats:</i>"));
             standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("The maximum health of this shield is {0}", (I.ShieldStats.MaxHealth)))));
             standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("The armor class of this shield is {0}", (I.ShieldStats.ArmourClass)))));
@@ -98,12 +100,23 @@ namespace AdvShields.UI
             */
             CreateSpace(0);
             StringDisplay stringDisplay3 = standardSegment1.AddInterpretter(StringDisplay.Quick("<i>Engine / Power draw:</i>"));
-            standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("The size of the shield creates a base power draw of <color=red>{0}</color>.", (I.BasePowerDrawUI)))));
-            standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("Power scale is increasing resting power draw by <color=purple>{0}</color>, and power draw while passively regenerating by <color=purple>{1}</color>.", (I.RestingPDDFromPowerScale), (I.ActivePDDFromPowerScale)))));
-            standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("While resting, the shield uses <color=red>{0}</color> engine power.", (I.RPDForUI)))));
-            standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("While passive regeneration is occuring, the shield uses <color=red>{0}</color> engine power.", (I.APDForUI)))));
+            standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("The capacitors on this system create a base power draw of {0}.", (I.GetNoModCapPowerUsed())))));
+            standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("Your placement of active rectifiers and overchargers adjusts the base power draw by a multiplier of <color=yellow>{0}</color>, meaning an actual difference of <color=yellow>{1}</color>", I.TotalCapMult(), I.TotalCapModDifference()))));
+            standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("The size of the dome adds {0} power draw, calculated by (L+W+H) * 3.", (I.ShieldSizePower)))));
+            standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I =>
+            {
+                bool hasMatrix = I.Node.matrixComputer != null;
+                if (hasMatrix) return string.Format("You have a matrix computer installed, adding {0} power cost (max energy / 250, minimum power draw of 500).", I.Node.matrixComputer.PowerPerSec);
+                else return "You do not have a matrix computer installed, so there is no power draw from that";
+            })));
+            standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I =>
+            {
+                bool hasSpoofer = I.ShieldStats.Spoofers > 0;
+                if (hasSpoofer) return string.Format("You have {0} spoofers, for a total power increase of {1} (spoofers * (300 * power mult)).", I.ShieldStats.Spoofers, (I.ShieldStats.Spoofers * (300 * I.TotalCapMult())));
+                else return "You do not have any spoofers attached, so there is no power draw from that";
+            })));
             standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("The shield is benefitting from a <color=green>{0}</color>% reduction in power use due to the circular shape of the shield.", (I.ShieldCircleness * 100) - 100))));
-            standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("The shield is also benefitting from a <color=green>{0}</color>% reduction in power use due to <color=red>{1}%</color> of the energy being affected by Active Rectifiers. This bonus is increased by 25% if you are using the Regenerator type shield (you would see this bonus reflected in this stat page.", (I.ShieldStats.ActiveRectifierSavingsPercent),(I.ActiveRectifierPercent)))));
+            standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("This comes to a final power draw of <color=purple>{0}</color> while resting. During passive regen, this is multiplied by 1.2 to become {1}, and during active regen it's multiplied by 2 to become {2}. Be sure your engine can handle it!", (I.GetPowerUsed() + I.ShieldSizePower / I.ShieldCircleness), (I.GetPowerUsed() + I.ShieldSizePower * 1.2f / I.ShieldCircleness), (I.GetPowerUsed() + I.ShieldSizePower * 2 / I.ShieldCircleness)))));
             CreateSpace(0);
             standardSegment1.SpaceBelow = 40f;
             standardSegment1.SpaceAbove = 40f;

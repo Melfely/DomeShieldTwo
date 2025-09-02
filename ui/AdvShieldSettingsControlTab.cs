@@ -26,15 +26,17 @@ namespace DomeShieldTwo.ui
 {
     public class AdvShieldSettingsControlTab : SuperScreen<AdvShieldProjector>
     {
+        public AdvShieldSettingsControlTab(ConsoleWindow window, AdvShieldProjector focus) : base(window, focus) { }
+        /*
         private DropDownMenuAlt<enumShieldDomeState> _shieldOnOffDropDown;
         private DropDownMenuAlt<enumPassiveRegenState> _shieldPRDropDown;
         private DropDownMenuAlt<enumShieldClassSelection> _shieldClassSelection;
         public AdvShieldSettingsControlTab(ConsoleWindow window, AdvShieldProjector focus) : base(window, focus)
         {
             Name = new Content("Shield Dome Control", new ToolTip("All of the settings that affect the shield's functionality", 200f), "shieldsc");
-            _shieldOnOffDropDown = new DropDownMenuAlt<enumShieldDomeState>(TextAnchor.MiddleCenter);
+            //_shieldOnOffDropDown = new DropDownMenuAlt<enumShieldDomeState>(TextAnchor.MiddleCenter);
             _shieldPRDropDown = new DropDownMenuAlt<enumPassiveRegenState>(TextAnchor.MiddleCenter);
-            _shieldClassSelection = new DropDownMenuAlt<enumShieldClassSelection>(TextAnchor.MiddleCenter);
+            //_shieldClassSelection = new DropDownMenuAlt<enumShieldClassSelection>(TextAnchor.MiddleCenter);
 
             _shieldOnOffDropDown.SetItems(new DropDownMenuAltItem<enumShieldDomeState>[2]
             {
@@ -100,6 +102,7 @@ namespace DomeShieldTwo.ui
                 },
             });
         }
+        */
         public override void Build()
         {
             ScreenSegmentStandard standardSegment1 = CreateStandardSegment(InsertPosition.OnCursor);
@@ -110,7 +113,7 @@ namespace DomeShieldTwo.ui
             standardSegment1.AddInterpretter(new Blank(30f));
             */
             StringDisplay stringDisplay2 = standardSegment1.AddInterpretter(StringDisplay.Quick("<i>Select shield class:</i>"));
-            standardSegment1.AddInterpretter(new DropDown<AdvShieldSettingsData, enumShieldClassSelection>(_focus.SettingsData, _shieldClassSelection, (I, b) => I.ShieldClass == b, (I, b) => I.ShieldClass.Us = b));
+            //standardSegment1.AddInterpretter(new DropDown<AdvShieldSettingsData, enumShieldClassSelection>(_focus.SettingsData, _shieldClassSelection, (I, b) => I.ShieldClass == b, (I, b) => I.ShieldClass.Us = b));
             standardSegment1.AddInterpretter(Quick.SliderNub(_focus.SettingsData, t => "ShieldReactivationPercent", null));
             standardSegment1.AddInterpretter(Quick.SliderNub(_focus.SettingsData, t => "ExcessDrive", null));
             StringDisplay stringDisplay3 = standardSegment1.AddInterpretter(StringDisplay.Quick("<i>Change how the energy in the system is distributed:</i>"));

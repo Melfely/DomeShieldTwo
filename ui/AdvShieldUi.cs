@@ -40,7 +40,6 @@ namespace AdvShields.UI
             window.DisplayTextPrompt = false;
             window.SetMultipleTabs(new AdvShieldSettingsControlTab(window, _focus), new AdvShieldTransformTab(window, _focus), new ExtensiveShieldStatisticsUI(window, _focus), new AdvShieldAppearanceTab(window, _focus), new ControlUiTab(window, _focus.Control, "Shield drive complex controller settings"));
             return window;
-
         }
     }
 }

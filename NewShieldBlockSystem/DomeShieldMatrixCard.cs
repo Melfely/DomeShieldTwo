@@ -1,4 +1,5 @@
-﻿using BrilliantSkies.Localisation;
+﻿using BrilliantSkies.Core.Logger;
+using BrilliantSkies.Localisation;
 using BrilliantSkies.Localisation.Runtime.FileManagers.Files;
 using BrilliantSkies.Ui.Tips;
 using DomeShieldTwo.newshieldblocksystem;
@@ -27,6 +28,7 @@ namespace DomeShieldTwo.NewShieldBlockSystem
             base.ItemSet();
             this.cardType = base.item.Code.Variables.GetInt("CardType");
             localCardName = DetermineCardType();
+            //AdvLogger.LogInfo($"We just put on a {localCardName} card?", LogOptions._AlertDevInGame);
         }
         private string DetermineCardType()
         {
@@ -48,28 +50,31 @@ namespace DomeShieldTwo.NewShieldBlockSystem
                     return "Particle";
                 case 0:
                     return "None";
+                default:
+                    return "None";
             }
-            return "None";
             //Switch, probably?
         }
 
         public override void FeelerFlowDown(DomeShieldFeeler feeler)
         {
             base.FeelerFlowDown(feeler);
+            //AdvLogger.LogInfo($"Is this happening before ItemSet?", LogOptions._AlertDevInGame);
             feeler.ConnectedCard = localCardName;
             base.Node.ConnectedCard = localCardName;
         }
 
         public override void PrepForDelete()
         {
+            if (base.Node != null) base.Node.ConnectedCard = "None";
             base.PrepForDelete();
-            base.Node.ConnectedCard = "None";
         }
 
         public override void ScrapBlock()
         {
+            if (base.Node != null) base.Node.ConnectedCard = "None";
             base.ScrapBlock();
-            base.Node.ConnectedCard = "None";
+
         }
 
         protected override void AppendToolTip(ProTip tip)

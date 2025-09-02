@@ -16,6 +16,7 @@ using BrilliantSkies.Core.Timing;
 using BrilliantSkies.Core.Types;
 //using BrilliantSkies.Core.Units;
 using BrilliantSkies.Core.UniverseRepresentation;
+using BrilliantSkies.Effects.Explosions;
 using BrilliantSkies.Effects.Pools.DamageAndDebris;
 using BrilliantSkies.Effects.SoundSystem;
 using BrilliantSkies.Ftd.AdvancedCannons;
@@ -34,6 +35,7 @@ using BrilliantSkies.Ftd.Missiles.Blueprints;
 using BrilliantSkies.Ftd.Missiles.Components;
 using BrilliantSkies.Ftd.Missiles.Editor;
 using BrilliantSkies.Ftd.Modes.MainMenu.Ui;
+using BrilliantSkies.Ftd.Planets.Instances.SpawnPoints;
 using BrilliantSkies.Ftd.Planets.World.Distances;
 using BrilliantSkies.GridCasts;
 using BrilliantSkies.Modding;
@@ -201,9 +203,9 @@ namespace AdvShields
     {
         private static bool Prefix(ParticleCannon __instance, ref int armNumber, ref Vector3 direction, ref float energy, ref int seed, ref IDamageLogger damageLogger)
         {
-            AdvLogger.LogInfo("Are you seeing this?", LogOptions._AlertDevInGame);
+            //AdvLogger.LogInfo("Are you seeing this?", LogOptions._AlertDevInGame);
             //This all works on a technical side... however, we still see no beam. Tragic.
-            ParticleCannonArm particleCannonArm = __instance.Node.Arms.Arms[armNumber];
+            /*
             Vector3 vector = BoresightErrors.AdjustForAccuracy(direction, __instance.StabilityExtraInaccuracy);
             bool flag = particleCannonArm.HasPort || particleCannonArm.HasTerminator;
             ParticleCannonEffect particleCannonEffect;
@@ -229,11 +231,17 @@ namespace AdvShields
             particleCannonEffect.ParticleType = __instance.ParticleData.ParticleType;
             particleCannonEffect.Range0Damage = __instance.GetDamage(energy, armNumber, false);
             particleCannonEffect.DistancePerSegment = ParticleCannonConstants.Range / 100f;
+            */
             foreach (AdvShieldProjector item in TypeStorage.GetObjects())
             {
                 if (item.SettingsData.IsShieldOn == enumShieldDomeState.Off) continue;
+                /*
+                if (item.Node.ConnectedCard == null) AdvLogger.LogWarning("Card was null (HOW?!?)", LogOptions._AlertDevInGame);
+                AdvLogger.LogInfo($"{item.Node.ConnectedCard}", LogOptions._AlertDevInGame);
+                */
+                //WHYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
+                if (item.Node.ConnectedCard != "Particle") continue;
                 //if (item.Node.ConnectedCard != "Particle") continue;
-
                 Elipse elipse = item.ShieldHandler.Shape;
                 elipse.UpdateInfo();
                 /*
@@ -246,6 +254,35 @@ namespace AdvShields
                 {
                     AdvLogger.LogInfo("Did we hit a shield?");
                     //Yes, this is amazingly working out.
+                    ParticleCannonArm particleCannonArm = __instance.Node.Arms.Arms[armNumber];
+                    Vector3 vector = BoresightErrors.AdjustForAccuracy(direction, __instance.StabilityExtraInaccuracy);
+                    bool flag = particleCannonArm.HasPort || particleCannonArm.HasTerminator;
+                    ParticleCannonEffect particleCannonEffect;
+                    if (flag)
+                    {
+                        particleCannonEffect = R_Blocks.ParticleCannonParticle.InstantiateACopy(__instance.GetFirePoint(0f), Quaternion.LookRotation(vector, __instance.GameWorldUp));
+                        particleCannonEffect.InaccuracyErrorAt1m = (direction - vector).magnitude;
+                    }
+                    else
+                    {
+                        ParticleCannonPipe lastPipe = particleCannonArm.LastPipe;
+                        particleCannonEffect = R_Blocks.ParticleCannonParticle.InstantiateACopy(lastPipe.GameWorldPosition + lastPipe.GameWorldForwards * (float)lastPipe.item.SizeInfo.ArrayPositionsUsed, Quaternion.LookRotation(lastPipe.GameWorldForwards));
+                    }
+                    particleCannonEffect.Attenuation = __instance.Attenuation * particleCannonArm.AttenuationFactor;
+                    /*
+                    __instance.effectScale = Mathf.Clamp(Interp.TwoPoints(__instance.particleScaleStart, __instance.particleScaleEnd, energy), 0f, 3.5f) * Mathf.Pow(__instance.ReloadTime, 0.2f);
+                    particleCannonEffect._lineRenderer.widthMultiplier = __instance.effectScale;
+                    particleCannonEffect.m_BaseColor = __instance.ParticleData.Color;
+                    particleCannonEffect._secondaryEffectRenderer.widthMultiplier = __instance.effectScale;
+                    particleCannonEffect._light.range = __instance.effectScale * 10f;
+                    particleCannonEffect._fireEffects.transform.localScale *= __instance.effectScale;
+                    particleCannonEffect.HorizontalFocus = __instance.ParticleData.Focus.Us * __instance.HorizontalFocusFactor * ParticleCannonConstants.FocusFactor;
+                    particleCannonEffect.VerticalFocus = __instance.ParticleData.Focus.Us * __instance.VerticalFocusFactor * ParticleCannonConstants.FocusFactor;
+                    */
+                    particleCannonEffect.Attenuation = __instance.Attenuation * particleCannonArm.AttenuationFactor;
+                    particleCannonEffect.ParticleType = __instance.ParticleData.ParticleType;
+                    particleCannonEffect.Range0Damage = __instance.GetDamage(energy, armNumber, false);
+                    particleCannonEffect.DistancePerSegment = ParticleCannonConstants.Range / 100f;
                     float num2 = ParticleCannonConstants.DamageAtRange(particleCannonEffect.Attenuation, particleCannonEffect.DistancePerSegment);
                     float num3 = particleCannonEffect.Range0Damage * num2;
                     switch (particleCannonEffect.ParticleType)
@@ -264,7 +301,7 @@ namespace AdvShields
                             break;
                         case ParticleType.Impact:
                             KineticDamageDescription kineticDamageDescription = new KineticDamageDescription(damageLogger, num3, ParticleCannonConstants.ImpactAp, true);
-                            item.ShieldHandler.ApplyThumpParticleDamage(kineticDamageDescription, hitPosition);
+                            item.ShieldHandler.ApplyThumpParticleDamage(num3, ParticleCannonConstants.ImpactAp, hitPosition);
                             break;
                     }
                     return false;
@@ -406,22 +443,17 @@ namespace AdvShields
             throw new NotImplementedException("It's a stub");
         }
     }
-
+    /*
     [HarmonyPatch(typeof(ProjectileCastingSystem), "CastMe", new Type[] { typeof(ProjectileImpactState), typeof(ISettablePositionAndRotation), typeof(Vector3), typeof(Vector3), typeof(Vector3), typeof(float), typeof(Vector3), typeof(int), typeof(Color) })]
     internal class ProjectileCastingSystem_Cast_Patch
     {
-        private static void Postfix (ref ProjectileImpactState pState, ref ISettablePositionAndRotation myTransform, ref Vector3 newPosition, ref Vector3 currentPosition, ref Vector3 normalisedDirection, ref float distance, ref Vector3 velocity, ref int debugId, ref Color projectileDebugColor, ref ProjectileUpdateType __result)
+        private static void Postfix (ProjectileCastingSystem __instance, ref ProjectileImpactState pState, ref ISettablePositionAndRotation myTransform, ref Vector3 newPosition, ref Vector3 currentPosition, ref Vector3 normalisedDirection, ref float distance, ref Vector3 velocity, ref int debugId, ref Color projectileDebugColor, ref ProjectileUpdateType __result)
         {
             foreach (AdvShieldProjector item in TypeStorage.GetObjects())
             {
                 if (item.SettingsData.IsShieldOn == enumShieldDomeState.Off) continue;
-
                 Elipse elipse = item.ShieldHandler.Shape;
                 elipse.UpdateInfo();
-                /*
-                RaycastHit hit;
-                Ray ray = new Ray(currentPosition, normalisedDirection);
-                */
                 Vector3 hitPosition;
                 Vector3 hitNormal;
                 if (elipse.CheckIntersection(currentPosition, normalisedDirection, out hitPosition, out hitNormal))
@@ -435,11 +467,184 @@ namespace AdvShields
                         //Yes, this is working perfectly. Would be awesome to play a vision explosion, though. Need to look into that.
                     }
                 }
-                /*
-                bool hitShield = elipse.CheckIntersection(newPosition, 30);
-                if (!hitShield) continue;
-                */
             }
+        }
+    }
+    */
+    [HarmonyPatch(typeof(AdvPooledProjectile), "MoveProjectile")]
+    internal class APSMove_Patch
+    {
+        private static bool Prefix(AdvPooledProjectile __instance)
+        {
+            Vector3 safePosition = __instance.SafePosition;
+            Vector3 gravityForAltitude = StaticPhysics.GetGravityForAltitude(safePosition.y);
+            gravityForAltitude.y = Mathf.Min(gravityForAltitude.y, 0);
+            float fixedDeltaTimeCache = GameTimer.Instance.FixedDeltaTimeCache;
+            __instance._pState.VelocityVector += gravityForAltitude * fixedDeltaTimeCache;
+            Vector3 vector = __instance._pState.FrameStartVelocity * fixedDeltaTimeCache;
+            Vector3 vector2 = safePosition + vector;
+            float magnitude = vector.magnitude;
+            Vector3 vector3 = vector / magnitude;
+            Vector3 hitPosition;
+            Vector3 hitNormal;
+            foreach (AdvShieldProjector item in TypeStorage.GetObjects())
+            {
+                if (item.SettingsData.IsShieldOn == enumShieldDomeState.Off) continue;
+                Elipse elipse = item.ShieldHandler.Shape;
+                elipse.UpdateInfo();
+                if (elipse.CheckIntersection(safePosition, vector3, out hitPosition, out hitNormal))
+                {
+                    float rayDistance = Vector3.Distance(hitPosition, __instance.SafePosition);
+                    if (magnitude > rayDistance)
+                    {
+                        //AdvLogger.LogInfo("APS shell just hit the shield?");
+                        ShellModel model = Traverse.Create(__instance).Field("_shellModel").GetValue<ShellModel>();
+                        item.ShieldHandler.HandleGenericAPSHit(model, hitPosition, __instance.Gunner);
+                        if (model.ExplosiveCharges.GetExplosionRadius() > 0)
+                        {
+                            GameEvents.Callbacks.DispatchToMainThread(delegate
+                            {
+                                float size = (6f * (model.ExplosiveCharges.GetExplosionDamage() / 3000));
+                                //AdvLogger.LogInfo(size.ToString(), LogOptions._AlertDevInGame);
+                                ExplosionVisualiser.Instance.MakeExplosion(size, hitPosition, null, false);
+                            }, false);
+                        }
+                        else if (model.ExplosiveCharges.GetFlakExplosionDamage() > 0)
+                        {
+                            GameEvents.Callbacks.DispatchToMainThread(delegate
+                            {
+                                float size = (6f * (model.ExplosiveCharges.GetFlakExplosionDamage() / 500));
+                                //AdvLogger.LogInfo(size.ToString(), LogOptions._AlertDevInGame);
+                                ExplosionVisualiser.Instance.MakeExplosion(size, hitPosition, null, false);
+                            }, false);
+                        }
+                            __instance.Deactivate(false);
+                    }
+                }
+            }
+            return true;
+        }
+    }
+    [HarmonyPatch(typeof(PooledCramProjectile), "MoveProjectile")]
+    internal class CRAMMove_Patch
+    {
+        private static bool Prefix(PooledCramProjectile __instance)
+        {
+            Vector3 safePosition = __instance.SafePosition;
+            Vector3 gravityForAltitude = StaticPhysics.GetGravityForAltitude(safePosition.y);
+            gravityForAltitude.y = Mathf.Min(gravityForAltitude.y, 0);
+            float fixedDeltaTimeCache = GameTimer.Instance.FixedDeltaTimeCache;
+            __instance._pState.VelocityVector += gravityForAltitude * fixedDeltaTimeCache;
+            Vector3 vector = __instance._pState.FrameStartVelocity * fixedDeltaTimeCache;
+            Vector3 vector2 = safePosition + vector;
+            float magnitude = vector.magnitude;
+            Vector3 vector3 = vector / magnitude;
+            Vector3 hitPosition;
+            Vector3 hitNormal;
+            foreach (AdvShieldProjector item in TypeStorage.GetObjects())
+            {
+                if (item.SettingsData.IsShieldOn == enumShieldDomeState.Off) continue;
+                Elipse elipse = item.ShieldHandler.Shape;
+                elipse.UpdateInfo();
+                if (elipse.CheckIntersection(safePosition, vector3, out hitPosition, out hitNormal))
+                {
+                    float rayDistance = Vector3.Distance(hitPosition, __instance.SafePosition);
+                    if (magnitude > rayDistance)
+                    {
+                        //AdvLogger.LogInfo("CRAM shell just hit the shield?");
+                        item.ShieldHandler.HandleGenericCRAMAndSimpleHit(__instance._pState, hitPosition);
+                        if (__instance._pState.ExplosiveDamage > 0)
+                        {
+                            GameEvents.Callbacks.DispatchToMainThread(delegate
+                            {
+                                float size = (6f * __instance._pState.ExplosiveDamage / 10000);
+                                //AdvLogger.LogInfo(size.ToString(), LogOptions._AlertDevInGame);
+                                ExplosionVisualiser.Instance.MakeExplosion(size, hitPosition, null, false);
+                            }, false);
+                        }
+                        __instance.Deactivate(false);
+                    }
+                }
+            }
+            return true;
+        }
+    }
+    [HarmonyPatch(typeof(PooledProjectile), "MoveProjectile")]
+    internal class SimpleProjectileMove_Patch
+    {
+        private static bool Prefix(PooledProjectile __instance)
+        {
+            Vector3 safePosition = __instance.SafePosition;
+            Vector3 gravityForAltitude = StaticPhysics.GetGravityForAltitude(safePosition.y);
+            gravityForAltitude.y = Mathf.Min(gravityForAltitude.y, 0);
+            float fixedDeltaTimeCache = GameTimer.Instance.FixedDeltaTimeCache;
+            __instance._pState.VelocityVector += gravityForAltitude * fixedDeltaTimeCache;
+            Vector3 vector = __instance._pState.FrameStartVelocity * fixedDeltaTimeCache;
+            Vector3 vector2 = safePosition + vector;
+            float magnitude = vector.magnitude;
+            Vector3 vector3 = vector / magnitude;
+            Vector3 hitPosition;
+            Vector3 hitNormal;
+            foreach (AdvShieldProjector item in TypeStorage.GetObjects())
+            {
+                if (item.SettingsData.IsShieldOn == enumShieldDomeState.Off) continue;
+                Elipse elipse = item.ShieldHandler.Shape;
+                elipse.UpdateInfo();
+                if (elipse.CheckIntersection(safePosition, vector3, out hitPosition, out hitNormal))
+                {
+                    float rayDistance = Vector3.Distance(hitPosition, __instance.SafePosition);
+                    if (magnitude > rayDistance)
+                    {
+                        //AdvLogger.LogInfo("SimpleWeapon shell just hit the shield?");
+                        item.ShieldHandler.HandleGenericCRAMAndSimpleHit(__instance._pState, hitPosition);
+                        if (__instance._pState.ExplosiveDamage > 0)
+                        {
+                            GameEvents.Callbacks.DispatchToMainThread(delegate
+                            {
+                                float size = (1f);
+                                ExplosionVisualiser.Instance.MakeExplosion(size, hitPosition, null, false);
+                            }, false);
+                        }
+                        __instance.Deactivate(false);
+                    }
+                }
+            }
+            return true;
+        }
+    }
+    [HarmonyPatch(typeof(PooledFragment), "MoveProjectile")]
+    internal class FragmentMove_Patch
+    {
+        private static bool Prefix(PooledFragment __instance)
+        {
+            Vector3 safePosition = __instance.SafePosition;
+            Vector3 gravityForAltitude = StaticPhysics.GetGravityForAltitude(safePosition.y);
+            gravityForAltitude.y = Mathf.Min(gravityForAltitude.y, 0);
+            float fixedDeltaTimeCache = GameTimer.Instance.FixedDeltaTimeCache;
+            __instance.PState.VelocityVector += gravityForAltitude * fixedDeltaTimeCache;
+            Vector3 vector = __instance.PState.FrameStartVelocity * fixedDeltaTimeCache;
+            Vector3 vector2 = safePosition + vector;
+            float magnitude = vector.magnitude;
+            Vector3 vector3 = vector / magnitude;
+            Vector3 hitPosition;
+            Vector3 hitNormal;
+            foreach (AdvShieldProjector item in TypeStorage.GetObjects())
+            {
+                if (item.SettingsData.IsShieldOn == enumShieldDomeState.Off) continue;
+                Elipse elipse = item.ShieldHandler.Shape;
+                elipse.UpdateInfo();
+                if (elipse.CheckIntersection(safePosition, vector3, out hitPosition, out hitNormal))
+                {
+                    float rayDistance = Vector3.Distance(hitPosition, __instance.SafePosition);
+                    if (magnitude > rayDistance)
+                    {
+                        //AdvLogger.LogInfo("Stray fragment just hit the shield?");
+                        item.ShieldHandler.HandleStrayFragmentHit(__instance.PState, hitPosition);
+                        __instance.Deactivate();
+                    }
+                }
+            }
+            return true;
         }
     }
     [HarmonyPatch(typeof(PlasmaProjectileCastingSystem), "DoCast", new Type[] { typeof(PooledPlasmaProjectile), typeof(Vector3), typeof(Vector3), typeof(Vector3), typeof(float), typeof(Vector3), typeof(int), typeof(Color) })]

@@ -6,6 +6,7 @@ using BrilliantSkies.Core.Maths;
 using BrilliantSkies.Core.Threading;
 using BrilliantSkies.Effects.Pools.DamageAndDebris;
 using BrilliantSkies.Ftd.Constructs.Modules.All.DebugAnnotations;
+using BrilliantSkies.Ftd.Constructs.Modules.All.FireDamage;
 using BrilliantSkies.Ftd.DamageLogging;
 using BrilliantSkies.Ftd.DamageModels;
 using BrilliantSkies.Ftd.Game.BattleOrchestration.AiPositioning;
@@ -82,17 +83,17 @@ namespace AdvShields
 
         public bool SufferingFromDisruptor = false;
 
-        public float DisruptionFactor = 0; //Keep this between 0 and 1
-
         public float EMPDamageCachedForDisruption = 0;
 
         public float TimeDisrupted = 0; //There will be a couple seconds of no disruption recovery before it begins "healing"
 
         public bool TargettedByContLaser = false;
 
-        public float TimeSinceHitByContLaser = 0;
+        //public float TimeSinceHitByContLaser = 0;
 
         public float ContLaserRegenFactor = 0; //Keep this between 0 and 1
+
+        public float TimeAtFullHealth = 0;
 
         public bool isActiveRegen = true;
         public float GetCurrentHealth()
@@ -119,7 +120,20 @@ namespace AdvShields
                 RemainingTime = time;
             }
         }
+
+        public struct ContLaserInstance
+        {
+            public float Factor;
+            public float Time;
+
+            public ContLaserInstance (float factor, float time)
+            {
+                Factor = factor;
+                Time = time;
+            }
+        }
         private List<FireInstance> fireStorage = new List<FireInstance>(256); // pre-allocated
+        private List<ContLaserInstance> laserStorage = new List<ContLaserInstance>(1000); //pre-allocated
 
         public AdvShieldHandler(AdvShieldProjector controller)
         {
@@ -142,13 +156,29 @@ namespace AdvShields
                 TimeSinceLastHit -= percent * stats.ActualWaitTime * 2;
                 if (TimeSinceLastHit < 0) TimeSinceLastHit = 0;
             }
+            isActiveRegen = false;
         }
 
-        public void HandleGenericShellHit(ProjectileImpactState state, Vector3 position)
+        public void HandleGenericAPSHit (ShellModel shell, Vector3 position, IDamageLogger gunner)
         {
-            //Yes, this is working perfectly. Would be awesome to play a vision explosion, though.
-            if (state.ShieldPiercing > 0) ShellHasDisruptor(state);
-            //We want the disruptor to come into affect before other damage applies.
+            //AdvLogger.LogInfo($"Running a test, does this shell have {shell.ExplosiveCharges.GetExplosionDamage()} HE damage?");
+            //It does!!! Oh thank goodness. We are getting things fixed!
+            foreach (var part in shell.PartsAndMesh.AllParts)
+            {
+                if (part.Type == ShellModuleType.ShieldBuster) { ShellHasDisruptor(shell.ExplosiveCharges.GetEmpDamage()); break; }
+            }
+            if (shell.ExplosiveCharges.GetExplosionDamage() > 0) ApplyHEDamage(shell.ExplosiveCharges.GetExplosionDamage(), position);
+            if (shell.ExplosiveCharges.GetFlakExplosionDamage() > 0) ApplyFlakDamage(shell.ExplosiveCharges.GetFlakExplosionDamage(), position);
+            if (shell.ExplosiveCharges.GetEmpDamage() > 0) ApplyEmpDamage(new EmpDamageDescription(gunner, shell.ExplosiveCharges.GetEmpDamage()), position);
+            if (shell.ExplosiveCharges.GetIncendiaryFuel() > 0) HandleNonFlamethrowerFireHit(shell.ExplosiveCharges.GetIncendiaryFuel(), shell.ExplosiveCharges.GetIncendiaryIntensity(), shell.ExplosiveCharges.GetIncendiaryOxidizer());
+            if (shell.ExplosiveCharges.GetFragCount() > 0) HandleFrag(shell.ExplosiveCharges.GetFragDamage(), shell.ExplosiveCharges.GetFragCount(), shell.ExplosiveCharges.GetFragAngle(), position);
+            if (shell.KineticDamage.ApplyAsMeleeDamage()) ApplyThumpDamage(shell.KineticDamage.GetKineticDamage(), shell.ArmourPierce.GetArmourPiercing(), position);
+            else ApplyPierceDamage(shell.KineticDamage.GetKineticDamage(), shell.ArmourPierce.GetArmourPiercing(), position);
+        }
+
+        public void HandleGenericCRAMAndSimpleHit(ProjectileImpactState state, Vector3 position)
+        {
+            //This should work for cram. Weird that it doesn't for APS, but, whatever x-x
             if (state.ExplosiveDamage > 0) ApplyHEDamage(state.ExplosiveDamage, position);
             if (state.EmpDamage > 0) ApplyEmpDamage(new EmpDamageDescription(state.Gunner, state.EmpDamage), position);
             if (state.FireFuel > 0) HandleNonFlamethrowerFireHit(state.FireFuel, state.FireIntensity, state.FireOxidizer);
@@ -156,11 +186,17 @@ namespace AdvShields
             if (state.ApplyAsMeleeDamage) ApplyThumpDamage(state.KineticDamage, state.ArmourPiercing, position);
             else ApplyPierceDamage(state.KineticDamage, state.ArmourPiercing, position);
         }
+
+        public void HandleStrayFragmentHit(ProjectileImpactState state, Vector3 position)
+        {
+            ApplyPierceDamage(state.KineticDamage, 4, position);
+        }
         public void ApplyLaserDamage(LaserDamageDescription LDD, Vector3 position, bool isContinuous)
         {
             //We got lasers to hit the shield. Just gotta actually code it now.
             float realDamage = LDD.CalculateDamage(LDD.DamagePotential, GetCurrentHealth(), position);
             realDamage *= GetCardMult("Laser");
+            //AdvLogger.LogInfo($"Laser damage after all mults: {realDamage}", LogOptions._AlertDevInGame);
             if (isContinuous) HandleContLaser(realDamage);
             CurrentDamageSustained += realDamage;
             float maxEnergy = stats.MaxHealth;
@@ -172,20 +208,27 @@ namespace AdvShields
             }
             if (!this.controller.OnPlayerTeam) DamageHelp.DisplayDamageMarker(Rounding.FloatToInt(realDamage), DamageType.Laser, GAME_STATE.MyTeam);
             AdjustTimeSinceLastHit(realDamage);
+            float remainingHealthFraction = Mathf.Clamp01((maxEnergy - CurrentDamageSustained) / maxEnergy);
+            Color hitColor = Color.Lerp(Color.red, Color.green, remainingHealthFraction);
+            //Don't forget to include the position
+            CreateAnimation(position, Mathf.Max(realDamage, 1), hitColor);
         }
 
         private void HandleContLaser(float realDamage)
         {
             TargettedByContLaser = true;
-            TimeSinceHitByContLaser = 0;
-            float laserPercentForRegen = (realDamage * 100) / stats.MaxHealth;
+            float laserPercentForRegen = (realDamage * 50) / stats.MaxHealth;
+            Math.Clamp(laserPercentForRegen, 0, 1);
+            ContLaserRegenFactor += laserPercentForRegen;
+            laserStorage.Add(new ContLaserInstance(laserPercentForRegen, 0.1f));
         }
         public void ApplyThumpDamage(float damage, float AP, Vector3 position)
         {
             float armorMod = AP / stats.ArmourClass;
-            float realDamage = damage / armorMod;
+            float realDamage = damage;
+            if (armorMod < 1) realDamage *= armorMod;
             realDamage *= GetCardMult("Thump");
-
+            //AdvLogger.LogInfo($"Thump damage after all mults: {realDamage}", LogOptions._AlertDevInGame);
             CurrentDamageSustained += realDamage;
             float maxEnergy = stats.MaxHealth;
             if (CurrentDamageSustained >= maxEnergy)
@@ -196,14 +239,19 @@ namespace AdvShields
             }
             if (!this.controller.OnPlayerTeam) DamageHelp.DisplayDamageMarker(Rounding.FloatToInt(realDamage), DamageType.Crash, GAME_STATE.MyTeam);
             AdjustTimeSinceLastHit(realDamage);
+            float remainingHealthFraction = Mathf.Clamp01((maxEnergy - CurrentDamageSustained) / maxEnergy);
+            Color hitColor = Color.Lerp(Color.red, Color.green, remainingHealthFraction);
+            //Don't forget to include the position
+            CreateAnimation(position, Mathf.Max(realDamage, 1), hitColor);
         }
 
-        public void ApplyPierceDamage(float damage, float AP, Vector3 position)
+        public void ApplyPierceDamage(float damage, float AP, Vector3 position, bool isParticle = false)
         {
             float armorMod = AP / stats.ArmourClass;
-            float realDamage = damage / armorMod;
+            float realDamage = damage;
+            if (armorMod < 1) realDamage *= armorMod;
             realDamage *= GetCardMult("Pierce");
-
+            //AdvLogger.LogInfo($"Pierce damage after all mults: {realDamage}", LogOptions._AlertDevInGame);
             CurrentDamageSustained += realDamage;
             float maxEnergy = stats.MaxHealth;
             if (CurrentDamageSustained >= maxEnergy)
@@ -212,7 +260,7 @@ namespace AdvShields
                 controller.SettingsData.IsShieldOn.Us = enumShieldDomeState.Off;
                 controller.ShieldDome.gameObject.GetComponent<MeshRenderer>().enabled = false;
             }
-            if (!this.controller.OnPlayerTeam) DamageHelp.DisplayDamageMarker(Rounding.FloatToInt(realDamage), DamageType.Kinetic, GAME_STATE.MyTeam);
+            if (!this.controller.OnPlayerTeam) { if (!isParticle) DamageHelp.DisplayDamageMarker(Rounding.FloatToInt(realDamage), DamageType.Kinetic, GAME_STATE.MyTeam); }
             AdjustTimeSinceLastHit(realDamage);
         }
 
@@ -222,7 +270,7 @@ namespace AdvShields
             float armorMod = PDD.ArmourPierce / stats.ArmourClass;
             realDamage *= armorMod;
             realDamage *= GetCardMult("Plasma");
-
+            //AdvLogger.LogInfo($"Plasma damage after all mults: {realDamage}", LogOptions._AlertDevInGame);
             CurrentDamageSustained += realDamage;
             float maxEnergy = stats.MaxHealth;
             if (CurrentDamageSustained >= maxEnergy)
@@ -242,7 +290,7 @@ namespace AdvShields
             realDamage *= armorMod;
 
             realDamage *= GetCardMult("Pierce");
-
+            //AdvLogger.LogInfo($"Frag damage after all mults: {realDamage}", LogOptions._AlertDevInGame);
             CurrentDamageSustained += realDamage;
             float maxEnergy = stats.MaxHealth;
             if (CurrentDamageSustained >= maxEnergy)
@@ -251,7 +299,7 @@ namespace AdvShields
                 controller.SettingsData.IsShieldOn.Us = enumShieldDomeState.Off;
                 controller.ShieldDome.gameObject.GetComponent<MeshRenderer>().enabled = false;
             }
-            if (!this.controller.OnPlayerTeam) DamageHelp.DisplayDamageMarker(Rounding.FloatToInt(realDamage), DamageType.Plasma, GAME_STATE.MyTeam);
+            if (!this.controller.OnPlayerTeam) DamageHelp.DisplayDamageMarker(Rounding.FloatToInt(realDamage), DamageType.Kinetic, GAME_STATE.MyTeam);
             AdjustTimeSinceLastHit(realDamage);
         }
 
@@ -276,6 +324,117 @@ namespace AdvShields
             return Mathf.Clamp01(avg + noise);
             //Thanks ChatGPT!
         }
+
+        public void ApplyHEDamage(float damage, Vector3 position)
+        {
+            AdvShieldStatusTwo stats = controller.ShieldStats;
+            float realDamage = CalculateActualHEDamage(damage, stats);
+            realDamage *= GetCardMult("Explosive");
+            //AdvLogger.LogInfo($"HE damage after all mults: {realDamage}", LogOptions._AlertDevInGame);
+            CurrentDamageSustained += realDamage;
+            float maxEnergy = stats.MaxHealth;
+            if (CurrentDamageSustained >= maxEnergy)
+            {
+                CurrentDamageSustained = maxEnergy;
+                controller.SettingsData.IsShieldOn.Us = enumShieldDomeState.Off;
+                controller.ShieldDome.gameObject.GetComponent<MeshRenderer>().enabled = false;
+            }
+            if (!this.controller.OnPlayerTeam) DamageHelp.DisplayDamageMarker(Rounding.FloatToInt(realDamage), DamageType.Explosive, GAME_STATE.MyTeam);
+            AdjustTimeSinceLastHit(realDamage);
+            float remainingHealthFraction = Mathf.Clamp01((maxEnergy - CurrentDamageSustained) / maxEnergy);
+            Color hitColor = Color.Lerp(Color.red, Color.green, remainingHealthFraction);
+            //AdvLogger.LogInfo($"Hit position was {position}");
+            //Don't forget to include the position
+            CreateAnimation(position, realDamage / maxEnergy, hitColor);
+        }
+        private float CalculateActualHEDamage(float damage, AdvShieldStatusTwo stats)
+        {
+            float realDamage = damage;
+            realDamage *= 0.8f;
+            float divisor = (2f / 59f) * stats.ArmourClass + (57f / 59f);
+            realDamage /= divisor;
+            //This feels a bit low?
+            return realDamage;
+        }
+
+        public void ApplyFlakDamage (float damage, Vector3 position)
+        {
+            ApplyHEDamage (damage/2, position);
+        }
+        public void ApplyEmpDamage(EmpDamageDescription dd, Vector3 position)
+        {
+            //This looks a little outdated...
+            AdvShieldStatusTwo stats = controller.ShieldStats;
+            float empdamage = dd.CalculateEmpDamage(GetCurrentHealth(), stats.ShieldEmpSusceptibility, stats.ShieldEmpResistivity, stats.ShieldEmpDamageFactor);
+            //Adding card mult, still think the method is outdated
+            empdamage *= GetCardMult("EMP");
+            //AdvLogger.LogInfo($"EMP damage after all mults: {empdamage}", LogOptions._AlertDevInGame);
+            //card mult
+            CurrentDamageSustained += empdamage * controller.SurfaceFactor;
+
+            float magnitude;
+            Vector3 hitPosition;
+
+            magnitude = empdamage / 300;
+            hitPosition = GridcastHit - controller.GameWorldPosition;
+            float maxEnergy = stats.MaxHealth;
+            if (CurrentDamageSustained >= maxEnergy)
+            {
+                CurrentDamageSustained = maxEnergy;
+                controller.SettingsData.IsShieldOn.Us = enumShieldDomeState.Off;
+                controller.ShieldDome.gameObject.GetComponent<MeshRenderer>().enabled = false;
+            }
+            if (!this.controller.OnPlayerTeam) DamageHelp.DisplayDamageMarker(Rounding.FloatToInt(empdamage), DamageType.Emp, GAME_STATE.MyTeam);
+            float remainingHealthFraction = Mathf.Clamp01((maxEnergy - CurrentDamageSustained) / maxEnergy);
+            Color hitColor = Color.Lerp(Color.red, Color.green, remainingHealthFraction);
+            AdjustTimeSinceLastHit(empdamage);
+            CreateAnimation(hitPosition, Mathf.Max(magnitude, 1), hitColor);
+        }
+        public void ShellHasDisruptor(float EMP)
+        {
+            if (!SufferingFromDisruptor)
+            {
+                SufferingFromDisruptor = true;
+                TimeDisrupted = 0;
+                AdvLogger.LogInfo($"EMP damage is showing as {EMP}");
+                EMP *= GetCardMult("EMP");
+                EMPDamageCachedForDisruption += EMP;
+                stats.ShieldIsDisrupted(EMPDamageCachedForDisruption);
+            }
+            else
+            {
+                EMP *= GetCardMult("EMP");
+                EMPDamageCachedForDisruption += EMP;
+                stats.ShieldIsDisrupted(EMPDamageCachedForDisruption);
+            }
+            //How will we code disruption?
+            //We need to go off of emp damage, not the "shield piercing" amount. We might need to do some tooltip adjusting in the cannon UI.
+        }
+
+        public void HandleFlamethrowerHit (PooledFlamerProjectile flame)
+        {
+            if (!isOnFire)
+            {
+                isOnFire = true;
+                fireStorage.Add(new FireInstance(flame.Fuel, flame.Intensity, flame.Oxidizer, 5));
+                NextShieldFireTick = 0;
+                return;
+            }
+            fireStorage.Add(new FireInstance(flame.Fuel, flame.Intensity, flame.Oxidizer, 5));
+        }
+
+        public void HandleNonFlamethrowerFireHit (float fuel, float intensity, float oxidizer)
+        {
+            if (!isOnFire)
+            {
+                isOnFire = true;
+                fireStorage.Add(new FireInstance(fuel, intensity, oxidizer, 5));
+                NextShieldFireTick = 0;
+                return;
+            }
+            fireStorage.Add(new FireInstance(fuel, intensity, oxidizer, 5));
+        }
+
         private void TakeFireDamage()
         {
             NextShieldFireTick = 0.5f;
@@ -311,6 +470,7 @@ namespace AdvShields
             stats.AdjustArmourNow(totalOxidizer);
             float realDamage = CalculateActualFireDamage(totalFuel, averageIntensity, stats.ArmourClass);
             realDamage *= GetCardMult("Fire");
+            //AdvLogger.LogInfo($"Fire damage after all mults: {realDamage}", LogOptions._AlertDevInGame);
             CurrentDamageSustained += realDamage;
             float maxEnergy = stats.MaxHealth;
             if (CurrentDamageSustained >= maxEnergy)
@@ -323,110 +483,16 @@ namespace AdvShields
             if (!this.controller.OnPlayerTeam) DamageHelp.DisplayDamageMarker(Rounding.FloatToInt(realDamage), DamageType.Fire, GAME_STATE.MyTeam);
             AdjustTimeSinceLastHit(realDamage);
         }
-        private float CalculateActualFireDamage (float fuel, float intensity, float AC)
+        private float CalculateActualFireDamage(float fuel, float intensity, float AC)
         {
             float mult = intensity / AC;
             Math.Clamp(mult, 0.5, 2);
-            return (fuel/10) * mult;
-        }
-
-        public void ApplyHEDamage(float damage, Vector3 position)
-        {
-            AdvShieldStatusTwo stats = controller.ShieldStats;
-            float realDamage = CalculateActualHEDamage(damage, stats);
-            realDamage *= GetCardMult("Explosive");
-            CurrentDamageSustained += realDamage;
-            float maxEnergy = stats.MaxHealth;
-            if (CurrentDamageSustained >= maxEnergy)
-            {
-                CurrentDamageSustained = maxEnergy;
-                controller.SettingsData.IsShieldOn.Us = enumShieldDomeState.Off;
-                controller.ShieldDome.gameObject.GetComponent<MeshRenderer>().enabled = false;
-            }
-            if (!this.controller.OnPlayerTeam) DamageHelp.DisplayDamageMarker(Rounding.FloatToInt(realDamage), DamageType.Explosive, GAME_STATE.MyTeam);
-            AdjustTimeSinceLastHit(realDamage);
-            float remainingHealthFraction = Mathf.Clamp01((maxEnergy - CurrentDamageSustained) / maxEnergy);
-            Color hitColor = Color.Lerp(Color.red, Color.green, remainingHealthFraction);
-            //Don't forget to include the position
-            //CreateAnimation(position, Mathf.Max(damage, 1), hitColor);
-        }
-        private float CalculateActualHEDamage(float damage, AdvShieldStatusTwo stats)
-        {
-            float realDamage = damage;
-            realDamage *= 0.8f;
-            float divisor = (2f / 59f) * stats.ArmourClass + (57f / 59f);
-            realDamage /= divisor;
-            //This feels a bit low?
-            return realDamage;
-        }
-        public void ApplyEmpDamage(EmpDamageDescription dd, Vector3 position)
-        {
-            //This looks a little outdated...
-            AdvShieldStatusTwo stats = controller.ShieldStats;
-            float empdamage = dd.CalculateEmpDamage(GetCurrentHealth(), stats.ShieldEmpSusceptibility, stats.ShieldEmpResistivity, stats.ShieldEmpDamageFactor);
-            //Adding card mult, still think the method is outdated
-            empdamage *= GetCardMult("EMP");
-            //card mult
-            CurrentDamageSustained += empdamage * controller.SurfaceFactor;
-
-            float magnitude;
-            Vector3 hitPosition;
-
-            magnitude = empdamage / 300;
-            hitPosition = GridcastHit - controller.GameWorldPosition;
-            float maxEnergy = stats.MaxHealth;
-            if (CurrentDamageSustained >= maxEnergy)
-            {
-                CurrentDamageSustained = maxEnergy;
-                controller.SettingsData.IsShieldOn.Us = enumShieldDomeState.Off;
-                controller.ShieldDome.gameObject.GetComponent<MeshRenderer>().enabled = false;
-            }
-            if (!this.controller.OnPlayerTeam) DamageHelp.DisplayDamageMarker(Rounding.FloatToInt(empdamage), DamageType.Emp, GAME_STATE.MyTeam);
-            float remainingHealthFraction = Mathf.Clamp01((maxEnergy - CurrentDamageSustained) / maxEnergy);
-            Color hitColor = Color.Lerp(Color.red, Color.green, remainingHealthFraction);
-            AdjustTimeSinceLastHit(empdamage);
-            //CreateAnimation(hitPosition, Mathf.Max(magnitude, 1), hitColor);
-        }
-        public void ShellHasDisruptor(ProjectileImpactState state)
-        {
-            if (!SufferingFromDisruptor)
-            {
-                SufferingFromDisruptor = true;
-                TimeDisrupted = 0;
-                EMPDamageCachedForDisruption = state.EmpDamage;
-                stats.ShieldIsDisrupted(EMPDamageCachedForDisruption);
-            }
-            //How will we code disruption?
-            //We need to go off of emp damage, not the "shield piercing" amount. We might need to do some tooltip adjusting in the cannon UI.
-        }
-
-        public void HandleFlamethrowerHit (PooledFlamerProjectile flame)
-        {
-            if (!isOnFire)
-            {
-                isOnFire = true;
-                fireStorage.Add(new FireInstance(flame.Fuel, flame.Intensity, flame.Oxidizer, 5));
-                NextShieldFireTick = 0;
-                return;
-            }
-            fireStorage.Add(new FireInstance(flame.Fuel, flame.Intensity, flame.Oxidizer, 5));
-        }
-
-        public void HandleNonFlamethrowerFireHit (float fuel, float intensity, float oxidizer)
-        {
-            if (!isOnFire)
-            {
-                isOnFire = true;
-                fireStorage.Add(new FireInstance(fuel, intensity, oxidizer, 5));
-                NextShieldFireTick = 0;
-                return;
-            }
-            fireStorage.Add(new FireInstance(fuel, intensity, oxidizer, 5));
+            return (fuel / 10) * mult;
         }
 
         public void ApplyPierceParticleDamage (ParticleDamageDescription pD, Vector3 position)
         {
-            ApplyPierceDamage(pD.CalculateDamage(stats.ArmourClass, GetCurrentHealth(), position), pD.ArmourPierce, position);
+            ApplyPierceDamage(pD.CalculateDamage(stats.ArmourClass, GetCurrentHealth(), position), pD.ArmourPierce, position, true);
         }
 
         public void ApplyExplosiveParticleDamage (ExplosionDamageDescription eD, Vector3 position)
@@ -439,56 +505,11 @@ namespace AdvShields
             ApplyEmpDamage(emD, position);
         }
 
-        public void ApplyThumpParticleDamage (KineticDamageDescription kd, Vector3 position)
+        public void ApplyThumpParticleDamage (float num3, float ap, Vector3 position)
         {
-            ApplyThumpDamage(kd.DamagePotential, kd.ArmourPierce, position);
+            ApplyThumpDamage(num3, ap, position);
         }
 
-        [ExtraThread("Should be callable from extra thread")]
-        public void ApplyDamage(IDamageDescription DD)
-        {
-            //We need to do away with this method because we are running unique calculations for every single damage type.
-            //I think we can get rid of this actually...
-            //Wrote a logger to see if it still happens, will delete before full release.
-            //Console.WriteLine(DD.GetType().ToString());
-            AdvLogger.LogWarning("You shouldn't be running ApplyDamage anymore", LogOptions._AlertDevInGame);
-            AdvShieldStatusTwo stats = controller.ShieldStats;
-
-            float damage = DD.CalculateDamage(stats.ArmourClass, GetCurrentHealth(), controller.GameWorldPosition);
-            CurrentDamageSustained += damage; //* controller.SurfaceFactor;
-
-            float magnitude;
-            Vector3 hitPosition;
-
-            if (DD is ExplosionDamageDescription)
-            {
-                ExplosionDamageDescription expDD = DD as ExplosionDamageDescription;
-                magnitude = expDD.Radius;
-                hitPosition = expDD.Position - controller.GameWorldPosition;
-            }
-            else if (DD is ApplyDamageCallback)
-            {
-                ApplyDamageCallback adc = (ApplyDamageCallback)DD;
-                magnitude = Traverse.Create(adc).Field("_radius").GetValue<float>();
-                hitPosition = GridcastHit - controller.GameWorldPosition;
-            }
-            else
-            {
-                magnitude = damage / 300;
-                hitPosition = GridcastHit - controller.GameWorldPosition;
-            }
-            float maxEnergy = stats.MaxHealth;
-            if (CurrentDamageSustained >= maxEnergy)
-            {
-                CurrentDamageSustained = maxEnergy;
-                controller.SettingsData.IsShieldOn.Us = enumShieldDomeState.Off;
-                controller.ShieldDome.gameObject.GetComponent<MeshRenderer>().enabled = false;
-            }
-            AdjustTimeSinceLastHit(damage);
-            float remainingHealthFraction = Mathf.Clamp01((maxEnergy - CurrentDamageSustained) / maxEnergy);
-            Color hitColor = Color.Lerp(Color.red, Color.green, remainingHealthFraction);
-            //CreateAnimation(hitPosition, Mathf.Max(magnitude, 1), hitColor);
-        }
         public float GetCardMult(string damType)
         {
             //We want the card mult to happen at the very end, right before damage is applied. AKA after all other calculations
@@ -628,23 +649,34 @@ namespace AdvShields
         }
         public void CreateAnimation(Vector3 worldHit, float magnitude, Color color)
         {
-            AdvLogger.LogInfo("Get ready to crash the game!");
+            //We'll have to work on this later.
+            return;
+            //AdvLogger.LogInfo("Get ready to crash the game!");
             //AdvLogger.LogInfo($"{controller.GameWorldPosition}");
             //We need to re-write this if possible
             //Vector3 shieldSpawnLocation = new Vector3(controller.ShieldDome.transform);
-            GameObject obj = UnityEngine.Object.Instantiate(StaticStorage.HitEffectObject, controller.ShieldDome.transform, false);
-            AdvLogger.LogInfo("0");
+            GameObject obj = UnityEngine.Object.Instantiate(StaticStorage.HitEffectObject);
+
+            // Match the shield dome transform exactly (world space)
+            Transform target = controller.ShieldDome.transform;
+            obj.transform.position = target.position;
+            obj.transform.rotation = target.rotation;
+            Vector3 scale = target.lossyScale;
+            scale.x += 0.5f;
+            scale.y += 0.5f;
+            scale.z += 0.5f; //Making the hit effect a tiny bit larger to ensure shows
+            obj.transform.localScale = scale; // world scale copy
+
+            // Now parent it so it follows the shield
+            obj.transform.SetParent(target);
+
             //obj.transform.position = controller.GameWorldPosition;
-            AdvLogger.LogInfo("1");
             //obj.transform.rotation = controller.GameWorldRotation;
-            AdvLogger.LogInfo("2");
             //obj.transform.localPosition = Transforms.LocalToGlobal(Vector3.zero, controller.GameWorldPosition, controller.GameWorldRotation);
-            AdvLogger.LogInfo("3");
             //obj.transform.localRotation = Transforms.LocalRotationToGlobalRotation(Quaternion.identity, controller.GameWorldRotation);
-            AdvLogger.LogInfo("4");
-            AdvLogger.LogInfo($"Shield's position is {controller.ShieldDome.transform.position}");
+            //AdvLogger.LogInfo($"Shield's position is {controller.ShieldDome.transform.position}");
             HitEffectBehaviour behaviour = obj.GetComponent<HitEffectBehaviour>();
-            behaviour.Initialize(worldHit, color, magnitude, 1.5f, controller.ShieldDome.transform);
+            behaviour.Initialize(worldHit, color, magnitude, 3f, controller.ShieldDome.transform);
         }
 
         private void HandleUpdateModifiers()
@@ -656,26 +688,38 @@ namespace AdvShields
             }
             if (TargettedByContLaser)
             {
-                if (TimeSinceHitByContLaser > 0.1f)
+                for (int i = laserStorage.Count - 1; i >= 0; i--)
                 {
-                    TargettedByContLaser = false;
-                    ContLaserRegenFactor = 0;
+                    var laser = laserStorage[i];
+                    laser.Time -= Time.deltaTime * Time.timeScale;
+                    if (laser.Time <= 0)
+                    {
+                        laserStorage.RemoveAt(i); // cheap O(1) removal at end
+                        ContLaserRegenFactor -= laser.Factor;
+                        continue;
+                    }
+
+                    laserStorage[i] = laser; // reassign since it's a struct
                 }
-                TimeSinceHitByContLaser += Time.deltaTime * Time.timeScale;
+                if (laserStorage.Count == 0) TargettedByContLaser = false;
             }
             if (SufferingFromDisruptor)
             {
+                //AdvLogger.LogInfo($"Current EMP cached is {EMPDamageCachedForDisruption}");
+                //AdvLogger.LogInfo($"Current time since first disrupted is cached is {TimeDisrupted}");
+
                 //We need to decide how we will work disruptors, eh?
-                if (DisruptionFactor <= 0)
+                if (EMPDamageCachedForDisruption <= 0)
                 {
                     SufferingFromDisruptor = false;
-                    DisruptionFactor = 0;
                     TimeDisrupted = 0;
+                    EMPDamageCachedForDisruption = 0;
+                    return;
                 }
                 stats.ShieldIsDisrupted(EMPDamageCachedForDisruption);
-                if (TimeDisrupted > 1)
+                if (TimeDisrupted > Math.Clamp(stats.ActualWaitTime / 2, 2, 30))
                 {
-                    
+                    EMPDamageCachedForDisruption -= ((stats.MaxHealth / 100) + ((stats.PassiveRegen/stats.MaxHealth) * 15) * Time.deltaTime * Time.timeScale);
                 }
                 TimeDisrupted += Time.deltaTime * Time.timeScale;
             }
@@ -690,11 +734,16 @@ namespace AdvShields
                 TimeSinceLastHit += Time.deltaTime * Time.timeScale;
                 if (TimeSinceLastHit > ShieldStats.ActualWaitTime) isActiveRegen = true;
             }
-            if (CurrentDamageSustained == 0.0f) return;
+            if (CurrentDamageSustained == 0.0f)
+            {
+                TimeAtFullHealth += Time.deltaTime * Time.timeScale;
+                return;
+            }
             if ((CurrentDamageSustained <= 0.0f) && (controller.SettingsData.IsShieldOn.Us == enumShieldDomeState.On))
             {
                 PassiveRegenText = "The shield is at full health, it is not regenerating.";
                 CurrentDamageSustained = 0.0f;
+                TimeAtFullHealth = 0;
                 return;
             }
 
@@ -705,6 +754,7 @@ namespace AdvShields
                 AmountPassivelyRegenerated += (ShieldStats.PassiveRegen * Time.deltaTime) * Time.timeScale;
                 //We are dividing by 70 to account for how often this method runs.
                 PassiveRegenText = "Shield is using significant engine power to passively regenerate the shield";
+                TimeAtFullHealth = 0;
                 return;
             }
             if (!isActiveRegen) return;
@@ -713,6 +763,7 @@ namespace AdvShields
                 controller.SettingsData.IsShieldOn.Us = enumShieldDomeState.On;
                 CurrentDamageSustained = controller.SettingsData.ShieldReactivationPercent / 100;
                 AmountPassivelyRegenerated = 0;
+                TimeAtFullHealth = 0;
                 ShieldDisabled = false;
                 controller.ShieldDome.gameObject.GetComponent<MeshRenderer>().enabled = true;
             }
@@ -746,6 +797,12 @@ namespace AdvShields
                 controller.ShieldData.Type.Us = enumShieldDomeState.On;
                 CurrentDamageSustained = 0.0f;
             }*/
+        }
+
+        public void ApplyDamage(IDamageDescription DD)
+        {
+            return;
+            //So that's why ApplyDamage exists
         }
     }
 }

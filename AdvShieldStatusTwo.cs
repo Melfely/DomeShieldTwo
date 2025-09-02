@@ -52,7 +52,8 @@ namespace DomeShieldTwo
         public bool NotEnoughEnergy = true;
         public float LastArmourReduction = 0;
         public float LastDisruptorStrength = 0;
-        public enumShieldClassSelection currentClass;
+        public float DisruptionFactor;
+        //public enumShieldClassSelection currentClass;
 
         public AdvShieldStatusTwo(AdvShieldProjector controller, float maxEnergyFactor, float armorClassFactor, float passiveRegenFactor)
         {
@@ -65,6 +66,7 @@ namespace DomeShieldTwo
         public void UpdateShieldInformation(DomeShieldNode node)
         {
             //AdvLogger.LogInfo("Running UpdateShieldInformation");
+            //"We are doing away with the class system.";
             if (ShieldHandler == null) ShieldHandler = controller.ShieldHandler;
             Hardeners = 0;
             Transformers = 0;
@@ -72,7 +74,7 @@ namespace DomeShieldTwo
             Spoofers = 0;
             Overchargers = 0;
             ShieldData = controller.SettingsData;
-            currentClass = ShieldData.ShieldClass;
+            //currentClass = ShieldData.ShieldClass;
             ShieldEmpSusceptibility = 1f;
             ShieldEmpResistivity = 0f;
             ShieldEmpDamageFactor = 2f; //base is 2 so that EMP doesn't deal less damage than other warheads.
@@ -93,35 +95,33 @@ namespace DomeShieldTwo
             adjustedTransformerIncrease /= 5f;
             if (Transformers == 0) adjustedTransformerIncrease = 0f;
 
-            if (currentClass == enumShieldClassSelection.HE) { MaxHealth *= 1.5f; HealthBeforePowerRouting *= 1.5f; }
+            //if (currentClass == enumShieldClassSelection.HE) { MaxHealth *= 1.5f; HealthBeforePowerRouting *= 1.5f; } "We will want to use these numbers";
             HealthLossFromRoutedPower = MaxHealth - HealthBeforePowerRouting;
 
-            ArmourClass = 20 + ((ShieldData.ArmourPercent / 100) * (adjustedHardenerIncrease * 3.5f));
-            if (currentClass == enumShieldClassSelection.AC) ArmourClass *= 1.2f;
+            ArmourClass = 25 + ((ShieldData.ArmourPercent / 75) * (adjustedHardenerIncrease * 3.5f));
             if (ShieldHandler.isOnFire) ArmourClass -= LastArmourReduction;
+            if (ShieldHandler.SufferingFromDisruptor) ArmourClass *= (1f - DisruptionFactor);
             Math.Round(ArmourClass, 0);
             if (ArmourClass < 2) ArmourClass = 2;
             ArmourIncrease = ArmourClass - BaseArmourClass;
 
             PassiveRegen = (MaxHealth / 700) + ((1f*((ShieldData.RegenPercent/1.7f))) * (adjustedTransformerIncrease));
-            if (currentClass == enumShieldClassSelection.REG) PassiveRegen *= 1.5f;
+            if (ShieldHandler.TargettedByContLaser) PassiveRegen *= (1f - (ShieldHandler.ContLaserRegenFactor * UnityEngine.Time.timeScale));
+            if (ShieldHandler.SufferingFromDisruptor) PassiveRegen *= (1f - DisruptionFactor);
             Math.Round(PassiveRegen, 1);
             RegenIncrease = PassiveRegen - BaseRegen;
 
             if (ShieldData.IsShieldOn.Us == enumShieldDomeState.On) AffectNumbersByAvailableEnginePower();
-            BaseWaitTime = (float)Math.Round(TotalBlocks * 0.3f, 1);
-            ActualWaitTime = (float)Math.Round(EffectiveBlocks * 0.3f, 1);
-            if (currentClass == enumShieldClassSelection.QH)
-            {
-                ActualWaitTime /= 2f;
-                if (ActualWaitTime < 1f) ActualWaitTime = 1f;
-            }
-            else if (ActualWaitTime < 5f) ActualWaitTime = 5f;
+            BaseWaitTime = (float)Math.Round(TotalBlocks * 0.25f, 1);
+            ActualWaitTime = (float)Math.Round(EffectiveBlocks * 0.25f, 1);
+            if (ActualWaitTime < 3f) ActualWaitTime = 3f;
         }
 
-        public void ShieldIsDisrupted(float factor)
+        public void ShieldIsDisrupted(float totalEMPDamageStored)
         {
-            float baseFactor = factor;
+            float factor = (totalEMPDamageStored * 4) / MaxHealth;
+            Math.Clamp(factor, 0.001, 0.8);
+            DisruptionFactor = factor;
         }
 
         private void AffectNumbersByAvailableEnginePower()
