@@ -139,7 +139,11 @@ namespace DomeShieldTwo.newshieldblocksystem
                     });
                     tip.Add(Position.Middle, new ProTipSegment_Text(num, text));
                 }
-                PPS += (float)beamInfo.PowerPerSec;
+                else if (beamInfo.Spoofers > 0 || beamInfo.Rectifiers > 0 || beamInfo.Hardeners > 0 || beamInfo.Overchargers > 0 || beamInfo.Transformers > 0)
+                {
+                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldPowerLink._locFile.Format("Tip_BeamWithModsNoCaps", "beam {0} has no capacitors but has modifiers attached", new object[] { i.ToString() })));
+                }
+                    PPS += (float)beamInfo.PowerPerSec;
                 /*
                 num3 += beamInfo.DamagePerSec;
                 num4 += beamInfo.GetDamageThisFrame();
