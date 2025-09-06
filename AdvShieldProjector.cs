@@ -729,11 +729,11 @@ namespace AdvShields
             }
             else if (ShieldHandler.isActiveRegen)
             {
-                request.IdealPower = power + ShieldSizePower * 2f / ShieldCircleness;
+                request.IdealPower = (power + ShieldSizePower / ShieldCircleness) * 2f;
             }
             else
             {
-                request.IdealPower = power + ShieldSizePower * 1.2f / ShieldCircleness;
+                request.IdealPower = (power + ShieldSizePower / ShieldCircleness) * 1.2f;
                 /*
                 request.IdealPower = ((float)(((TransformData.Length * TransformData.Width * TransformData.Height * 0.006f) + 200f) + (ShieldStats.PassiveRegen * 1.5f) * (float)Math.Round(SettingsData.ExcessDrive / 2.25f + 0.5555f, 1) / ShieldCircleness)) * ShieldStats.ActiveRectifierSavingsPercent;
                 PowerDrawDifference = ((float)(((TransformData.Length * TransformData.Width * TransformData.Height * 0.006f) + 200f) + (ShieldStats.PassiveRegen * 1.5f) * (float)Math.Round(SettingsData.ExcessDrive / 2.25f + 0.5555f, 1) * ShieldCircleness - (float)(((TransformData.Length * TransformData.Width * TransformData.Height * 0.006f) + 200f) * (float)Math.Round(SettingsData.ExcessDrive / 2.25f + 0.5555f, 1) * ShieldCircleness))) * ShieldStats.ActiveRectifierSavingsPercent;

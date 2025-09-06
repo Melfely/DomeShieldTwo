@@ -81,6 +81,13 @@ namespace DomeShieldTwo.newshieldblocksystem
             this.dSPLs.Clear();
             this.matrixComputer = null;
         }
+        public override void AfterSendingOutFeelers()
+        {
+            foreach (DomeShieldPowerLink link in this.dSPLs)
+            {
+                link.CalculateActualEnergyAndPowerModifier();
+            }
+        }
         /*
         public override void AfterSendingOutFeelers()
         {

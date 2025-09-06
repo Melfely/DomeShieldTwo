@@ -106,16 +106,16 @@ namespace DomeShieldTwo.newshieldblocksystem
         }
         public float SetParts(DomeShieldFeeler feeler)
         {
-            float num = feeler.TotalCapacitorSize - this.MaxEnergy;
+            this.Overchargers = feeler.Overchargers;
+            this.Rectifiers = feeler.rectifiers;
             this.Hardeners = feeler.hardeners;
             this.TotalCapacitorSize = (int)feeler.TotalCapacitorSize;
-            this.TotalEnergyInBeam = (int)feeler.TotalEnergyInBeam;
             this.TotalBlocks = feeler.ItemsFlownThrough;
             this.Transformers = feeler.transformers;
-            this.Rectifiers = feeler.rectifiers;
             this.MaxEnergy = feeler.TotalEnergyInBeam;
-            this.Overchargers = feeler.Overchargers;
+            this.TotalEnergyInBeam = (int)MaxEnergy;
             this.Spoofers = feeler.Spoofers;
+            float num = this.MaxEnergy;
             return num;
             
             //Yeaaahhh... this one's gonna take some work. FrequencyDoublers and Destabalisers won't be used, but we can easily swap those out for int 'other thing'.

@@ -183,7 +183,7 @@ namespace AdvShields
             if (name.Contains("EMP"))
             {
                 var thing = M.m<AmmoCustomise>(getter);
-                AdvLogger.LogInfo(getter.ToString(), LogOptions._AlertDevInGame);
+                //AdvLogger.LogInfo(getter.ToString(), LogOptions._AlertDevInGame);
             }
             if (name.Contains("Shield"))
             {
@@ -252,7 +252,7 @@ namespace AdvShields
                 Vector3 hitNormal;
                 if (elipse.CheckIntersection(__instance.GetFirePoint(0), direction, out hitPosition, out hitNormal))
                 {
-                    AdvLogger.LogInfo("Did we hit a shield?");
+                    //AdvLogger.LogInfo("Did we hit a shield?");
                     //Yes, this is amazingly working out.
                     ParticleCannonArm particleCannonArm = __instance.Node.Arms.Arms[armNumber];
                     Vector3 vector = BoresightErrors.AdjustForAccuracy(direction, __instance.StabilityExtraInaccuracy);
@@ -480,7 +480,6 @@ namespace AdvShields
             Vector3 gravityForAltitude = StaticPhysics.GetGravityForAltitude(safePosition.y);
             gravityForAltitude.y = Mathf.Min(gravityForAltitude.y, 0);
             float fixedDeltaTimeCache = GameTimer.Instance.FixedDeltaTimeCache;
-            __instance._pState.VelocityVector += gravityForAltitude * fixedDeltaTimeCache;
             Vector3 vector = __instance._pState.FrameStartVelocity * fixedDeltaTimeCache;
             Vector3 vector2 = safePosition + vector;
             float magnitude = vector.magnitude;
@@ -534,7 +533,6 @@ namespace AdvShields
             Vector3 gravityForAltitude = StaticPhysics.GetGravityForAltitude(safePosition.y);
             gravityForAltitude.y = Mathf.Min(gravityForAltitude.y, 0);
             float fixedDeltaTimeCache = GameTimer.Instance.FixedDeltaTimeCache;
-            __instance._pState.VelocityVector += gravityForAltitude * fixedDeltaTimeCache;
             Vector3 vector = __instance._pState.FrameStartVelocity * fixedDeltaTimeCache;
             Vector3 vector2 = safePosition + vector;
             float magnitude = vector.magnitude;
@@ -578,7 +576,6 @@ namespace AdvShields
             Vector3 gravityForAltitude = StaticPhysics.GetGravityForAltitude(safePosition.y);
             gravityForAltitude.y = Mathf.Min(gravityForAltitude.y, 0);
             float fixedDeltaTimeCache = GameTimer.Instance.FixedDeltaTimeCache;
-            __instance._pState.VelocityVector += gravityForAltitude * fixedDeltaTimeCache;
             Vector3 vector = __instance._pState.FrameStartVelocity * fixedDeltaTimeCache;
             Vector3 vector2 = safePosition + vector;
             float magnitude = vector.magnitude;
@@ -621,7 +618,6 @@ namespace AdvShields
             Vector3 gravityForAltitude = StaticPhysics.GetGravityForAltitude(safePosition.y);
             gravityForAltitude.y = Mathf.Min(gravityForAltitude.y, 0);
             float fixedDeltaTimeCache = GameTimer.Instance.FixedDeltaTimeCache;
-            __instance.PState.VelocityVector += gravityForAltitude * fixedDeltaTimeCache;
             Vector3 vector = __instance.PState.FrameStartVelocity * fixedDeltaTimeCache;
             Vector3 vector2 = safePosition + vector;
             float magnitude = vector.magnitude;

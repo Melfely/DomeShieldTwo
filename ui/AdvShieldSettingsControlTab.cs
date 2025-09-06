@@ -26,7 +26,7 @@ namespace DomeShieldTwo.ui
 {
     public class AdvShieldSettingsControlTab : SuperScreen<AdvShieldProjector>
     {
-        public AdvShieldSettingsControlTab(ConsoleWindow window, AdvShieldProjector focus) : base(window, focus) { }
+        public AdvShieldSettingsControlTab(ConsoleWindow window, AdvShieldProjector focus) : base(window, focus) { Name = new Content("Shield Dome Control", new ToolTip("All of the settings that affect the shield's functionality", 200f), "shieldsc"); }
         /*
         private DropDownMenuAlt<enumShieldDomeState> _shieldOnOffDropDown;
         private DropDownMenuAlt<enumPassiveRegenState> _shieldPRDropDown;
@@ -112,7 +112,7 @@ namespace DomeShieldTwo.ui
             standardSegment1.AddInterpretter(new DropDown<AdvShieldSettingsData, enumShieldDomeState>(_focus.SettingsData, _shieldOnOffDropDown, (I, b) => I.IsShieldOn == b, (I, b) => I.IsShieldOn.Us = b));
             standardSegment1.AddInterpretter(new Blank(30f));
             */
-            StringDisplay stringDisplay2 = standardSegment1.AddInterpretter(StringDisplay.Quick("<i>Select shield class:</i>"));
+            //StringDisplay stringDisplay2 = standardSegment1.AddInterpretter(StringDisplay.Quick("<i>Select shield class:</i>"));
             //standardSegment1.AddInterpretter(new DropDown<AdvShieldSettingsData, enumShieldClassSelection>(_focus.SettingsData, _shieldClassSelection, (I, b) => I.ShieldClass == b, (I, b) => I.ShieldClass.Us = b));
             standardSegment1.AddInterpretter(Quick.SliderNub(_focus.SettingsData, t => "ShieldReactivationPercent", null));
             standardSegment1.AddInterpretter(Quick.SliderNub(_focus.SettingsData, t => "ExcessDrive", null));
@@ -125,7 +125,7 @@ namespace DomeShieldTwo.ui
             standardSegment1.SpaceBelow = 40f;
             standardSegment1.SpaceAbove = 40f;
             //stringDisplay1.Justify = new TextAnchor?(TextAnchor.UpperLeft);
-            stringDisplay2.Justify = new TextAnchor?(TextAnchor.UpperLeft);
+            //stringDisplay2.Justify = new TextAnchor?(TextAnchor.UpperLeft);
             stringDisplay3.Justify = new TextAnchor?(TextAnchor.UpperLeft);
 
             CreateSpace(0);

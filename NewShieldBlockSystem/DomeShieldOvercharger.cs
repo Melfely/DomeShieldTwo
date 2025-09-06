@@ -33,7 +33,7 @@ namespace DomeShieldTwo.NewShieldBlockSystem
         }
         public override string GetConnectionInstructions()
         {
-            return DomeShieldOvercharger._locFile.Get("Return_Connect", "Connect to dome shield links, dome shield capacitors, or dome shield modifiers.", true);
+            return DomeShieldOvercharger._locFile.Get("Return_Connect", "Connect to power links, capacitors, or modifiers.", true);
         }
 
 

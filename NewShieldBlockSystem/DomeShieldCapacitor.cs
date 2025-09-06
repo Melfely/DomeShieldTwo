@@ -56,7 +56,7 @@ namespace DomeShieldTwo.newshieldblocksystem
         }
         public override string GetConnectionInstructions()
         {
-            return DomeShieldCapacitor._locFile.Get("Return_Connect", " Connect to a Dome Shield coupler or another capacitor.", true);
+            return DomeShieldCapacitor._locFile.Get("Return_Connect", "Connect to power links or other capacitors", true);
         }
         public new static ILocFile _locFile = Loc.GetFile("Dome_Shield_Capacitor");
 

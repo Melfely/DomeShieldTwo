@@ -1,15 +1,16 @@
 ﻿using BrilliantSkies.Blocks.Separator;
 using BrilliantSkies.Core.Help;
 using BrilliantSkies.Core.Types;
-using BrilliantSkies.Localisation.Runtime.FileManagers.Files;
+using BrilliantSkies.Ftd.Constructs.Modules.All.DebugAnnotations;
 using BrilliantSkies.Localisation;
+using BrilliantSkies.Localisation.Runtime.FileManagers.Files;
 using BrilliantSkies.Ui.Tips;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
 using UnityEngine;
-using System.Diagnostics;
 
 namespace DomeShieldTwo.newshieldblocksystem
 {
@@ -44,11 +45,78 @@ namespace DomeShieldTwo.newshieldblocksystem
             feeler.CurrentDSPL = this;
             feeler.ItemsFlownThrough++;
         }
+        public int PowerPerSec
+        {
+            get
+            {
+                return CalculateActualEnergyAndPowerModifier();
+            }
+            //We can fine tune this number
+        }
+
+        public int CalculateActualEnergyAndPowerModifier()
+        {
+            int hardeners = 0;
+            int transformers = 0;
+            int overchargers = 0;
+            int ARs = 0;
+            int spoofers = 0;
+            float totalCapSize = 0;
+            int LBs = 0;
+            for (int i = 0; i < 6; i++)
+            {
+                DomeShieldBeamInfo beamInfo = this.dSBeamInfo[i];
+                /*
+                num3 += beamInfo.DamagePerSec;
+                num4 += beamInfo.GetDamageThisFrame();
+                */
+                hardeners += beamInfo.Hardeners;
+                transformers += beamInfo.Transformers;
+                overchargers += beamInfo.Overchargers;
+                ARs += beamInfo.Rectifiers;
+                spoofers += beamInfo.Spoofers;
+                LBs += beamInfo.TotalBlocks;
+                totalCapSize += beamInfo.TotalCapacitorSize;
+            }
+            OverchargersOnLink = overchargers;
+            RectifiersOnLink = ARs;
+            float mult = GetPowerMultiplier();
+            float num = totalCapSize * (20 * mult);
+            num += (spoofers * (300 * mult));
+            int num2 = Rounding.FloatToInt(num);
+            return num2;
+        }
+        public float GetPowerMultiplier()
+        {
+            float multiplier = ((1 * GetOverchargerPowerMultiplier()) * GetRegulatorPowerMultiplier());
+            return multiplier;
+        }
+
+        private float GetOverchargerPowerMultiplier()
+        {
+            float baseIncrease = (float)OverchargersOnLink * 1.1f;
+            float penalty = ((baseIncrease * 1.83f) - OverchargersOnLink) - 1;
+            float adjustedIncrease = baseIncrease - penalty;
+            if (OverchargersOnLink == 0) adjustedIncrease = 1;
+            if (OverchargersOnLink == 1) adjustedIncrease = 1.1f;
+            return adjustedIncrease;
+            //return 1f + ((overchargers * 1.1f) * (0.1f - ((float)Math.Pow(100 / overchargers, 0.1))));
+            //What on earth was I doing with this formula LMAO
+        }
+        private float GetRegulatorPowerMultiplier()
+        {
+            float baseReduction = (RectifiersOnLink * 0.05f);
+            float adjustedReduction = baseReduction - (RectifiersOnLink * 0.006f);
+            float finalReduction = 1f - adjustedReduction;
+            if (RectifiersOnLink == 1) finalReduction = 0.95f;
+            if (RectifiersOnLink == 0) finalReduction = 1f;
+            return finalReduction;
+        }
         protected override void AppendToolTip(ProTip tip)
         {
             
             base.AppendToolTip(tip);
-            tip.SetSpecial_Name(DomeShieldPowerLink._locFile.Get("SpecialName", "Dome Shield Power Link", true), DomeShieldPowerLink._locFile.Get("SpecialDescription", "Connects dome shield cavities and modifiers to the Hardpoint. Components attatched to this link will use Engine power.", true));
+            tip.SetSpecial_Name(DomeShieldPowerLink._locFile.Get("SpecialName", "Dome Shield Power Link", true), DomeShieldPowerLink._locFile.Get("SpecialDescription", "Connects dome shield cavities and modifiers to the controller block. Components attatched to this link will use Engine power.", true));
             int num = 400;
             float PPS = 0f;
             int hardeners = 0;
@@ -69,18 +137,18 @@ namespace DomeShieldTwo.newshieldblocksystem
                     Mathf.Round(beamInfo.MaxEnergy).ToString()
                     });
                     tip.Add(Position.Middle, new ProTipSegment_Text(num, text));
-                    PPS += (float)beamInfo.PowerPerSec;
-                    /*
-                    num3 += beamInfo.DamagePerSec;
-                    num4 += beamInfo.GetDamageThisFrame();
-                    */
-                    hardeners += beamInfo.Hardeners;
-                    transformers += beamInfo.Transformers;
-                    overchargers += beamInfo.Overchargers;
-                    ARs += beamInfo.Rectifiers;
-                    spoofers += beamInfo.Spoofers;
-                    LBs += beamInfo.TotalBlocks;
                 }
+                PPS += (float)beamInfo.PowerPerSec;
+                /*
+                num3 += beamInfo.DamagePerSec;
+                num4 += beamInfo.GetDamageThisFrame();
+                */
+                hardeners += beamInfo.Hardeners;
+                transformers += beamInfo.Transformers;
+                overchargers += beamInfo.Overchargers;
+                ARs += beamInfo.Rectifiers;
+                spoofers += beamInfo.Spoofers;
+                LBs += beamInfo.TotalBlocks;
             }
             tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldPowerLink._locFile.Format("Tip_PowerUse", "Power use: <<{0}>>", new object[] { PPS })));
             tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldPowerLink._locFile.Format("Tip_Hardeners", "Hardeners: <<{0}>>", new object[] { hardeners })));
@@ -107,7 +175,7 @@ namespace DomeShieldTwo.newshieldblocksystem
         public override void InspectFeelerAfterDirection(DomeShieldFeeler feeler, Vector3i localDirection, int index)
         {
             DomeShieldBeamInfo dSBeamInfo = this.dSBeamInfo[index];
-            base.Node.MaximumEnergy += dSBeamInfo.SetParts(feeler);
+            LocalEnergyBeforeMods += dSBeamInfo.SetParts(feeler);
             feeler.ResetPartsToZero();
             //This will need coming back to because of the replacement of FDs and DEs
             //We are calling FDs 'Shield Hardeners" and DEs "Shield Transformers"
@@ -165,5 +233,8 @@ namespace DomeShieldTwo.newshieldblocksystem
         {
             public float[] DSBeamEnergy;
         }
+        public float LocalEnergyBeforeMods;
+        public int OverchargersOnLink;
+        public int RectifiersOnLink;
     }
 }

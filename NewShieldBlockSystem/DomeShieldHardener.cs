@@ -29,11 +29,11 @@ namespace DomeShieldTwo.newshieldblocksystem
         protected override void AppendToolTip(ProTip tip)
         {
             base.AppendToolTip(tip);
-            tip.SetSpecial_Name(DomeShieldHardener._locFile.Get("SpecialName", "Dome Shield Hardener", true), DomeShieldHardener._locFile.Get("SpecialDescription", "Increases the density of the shield, which increases the armour class. Negatively impacts regeneration speed as the flow of electricity is affected by the density. Connect to couplers, cavities or other connected cavity components.", true));
+            tip.SetSpecial_Name(DomeShieldHardener._locFile.Get("SpecialName", "Dome Shield Hardener", true), DomeShieldHardener._locFile.Get("SpecialDescription", "Increases the effect of diverting energy towards Armor", true));
         }
         public override string GetConnectionInstructions()
         {
-            return DomeShieldHardener._locFile.Get("Return_Connect", "Connect to dome shield couplers, dome shield cavities, or dome shield modifiers.", true);
+            return DomeShieldHardener._locFile.Get("Return_Connect", "Connect to power links, capacitors, or modifiers.", true);
         }
 
         public override BlockTechInfo GetTechInfo()

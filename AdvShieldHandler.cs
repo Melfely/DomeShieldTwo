@@ -145,14 +145,14 @@ namespace AdvShields
         public void AdjustTimeSinceLastHit(float damage)
         {
             AdvShieldStatusTwo stats = controller.ShieldStats;
-            if (damage > stats.MaxHealth / 10) TimeSinceLastHit = 0;
-            else if (damage <  stats.MaxHealth / 100)
+            if (damage > stats.MaxHealth / 100) TimeSinceLastHit = 0;
+            else if (damage < 2000 && damage < stats.MaxHealth / 500)
             {
                 return;
             }
             else
             {
-                float percent = damage / stats.MaxHealth;
+                float percent = damage / (stats.MaxHealth / 25);
                 TimeSinceLastHit -= percent * stats.ActualWaitTime * 2;
                 if (TimeSinceLastHit < 0) TimeSinceLastHit = 0;
             }
@@ -581,6 +581,8 @@ namespace AdvShields
                     return 0.2f;
                 case "Fire":
                     return 4f;
+                case "Laser":
+                    return 2;
                 default:
                     return 1f;
                     //Default means it wasn't any other case.
@@ -751,7 +753,7 @@ namespace AdvShields
             {
                 if (ShieldDisabled) return;
                 CurrentDamageSustained -= (ShieldStats.PassiveRegen * Time.deltaTime) * Time.timeScale;
-                AmountPassivelyRegenerated += (ShieldStats.PassiveRegen * Time.deltaTime) * Time.timeScale;
+                //AmountPassivelyRegenerated += (ShieldStats.PassiveRegen * Time.deltaTime) * Time.timeScale;
                 //We are dividing by 70 to account for how often this method runs.
                 PassiveRegenText = "Shield is using significant engine power to passively regenerate the shield";
                 TimeAtFullHealth = 0;
@@ -761,7 +763,7 @@ namespace AdvShields
             if ((CurrentDamageSustained / ShieldStats.MaxHealth <= (1-(controller.SettingsData.ShieldReactivationPercent / 100))) && (controller.SettingsData.IsShieldOn.Us == enumShieldDomeState.Off))
             {
                 controller.SettingsData.IsShieldOn.Us = enumShieldDomeState.On;
-                CurrentDamageSustained = controller.SettingsData.ShieldReactivationPercent / 100;
+                CurrentDamageSustained = ShieldStats.MaxHealth * (controller.SettingsData.ShieldReactivationPercent / 100);
                 AmountPassivelyRegenerated = 0;
                 TimeAtFullHealth = 0;
                 ShieldDisabled = false;

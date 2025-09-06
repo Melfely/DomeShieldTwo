@@ -13,7 +13,7 @@ namespace DomeShieldTwo.newshieldblocksystem
         //I assume this is important?
         protected virtual string GetConnectionText()
         {
-            return base.LinkedUp ? DomeShieldComponent._locFile.Format("Return_Connected", " Connected to Dome Shield Multipurpose Block. <color=white>{0}</color>", new object[] { base.Node.GoverningBlock.IdSet.ParseName(false) }) : "";
+            return base.LinkedUp ? DomeShieldComponent._locFile.Format("Return_Connected", " Connected to the Dome Shield system. <color=white>{0}</color>", new object[] { base.Node.GoverningBlock.IdSet.ParseName(false) }) : "";
         }
         public override void Secondary(Transform T)
         {

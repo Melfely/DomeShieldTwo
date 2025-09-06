@@ -32,7 +32,7 @@ namespace DomeShieldTwo
         public float TotalBlocks;
         public float EffectiveBlocks;
         public float HealthBeforePowerRouting;
-        public float BaseArmourClass = 20;
+        public float BaseArmourClass = 10;
         public float BaseRegen;
         public float HealthLossFromRoutedPower;
         public float ArmourIncrease;
@@ -81,31 +81,34 @@ namespace DomeShieldTwo
             int mE = SetShieldNumbers(node);
             HealthBeforePowerRouting = mE;
             BaseRegen = mE / 700;
+            MaxHealth = mE * (1f - ((ShieldData.ArmourPercent + ShieldData.RegenPercent) / 100f));
+            if (MaxHealth == 0 && mE > 0) MaxHealth = 1f;
+
             CombinedRoutedPowerPercent = ShieldData.ArmourPercent + ShieldData.RegenPercent;
-            float baseHardenerIncrease = (Hardeners * 2f);
-            float adjustedHardenerIncrease = baseHardenerIncrease - Mathf.Min((float)Math.Pow(Hardeners * 0.3f, 1.40f), (Hardeners));
-            if (Hardeners == 0) adjustedHardenerIncrease = 1.5f;
+
+            float baseHardenerIncrease = (Hardeners * (1.3f - Math.Min(MaxHealth / 500000, 0.25f)));
+            float adjustedHardenerIncrease = baseHardenerIncrease - Mathf.Min((float)Math.Pow(Hardeners * 0.15f, 1.20f), (Hardeners));
+            if (Hardeners == 0) adjustedHardenerIncrease = 1f;
 
             //if (Hardeners == 1) adjustedHardenerIncrease = 1.8f;
-            MaxHealth = mE * (1f - ((ShieldData.ArmourPercent + ShieldData.RegenPercent) / 100f));
 
-            float baseTransformerIncrease = (Transformers * (MaxHealth / 2500f));
+            float baseTransformerIncrease = (Transformers * (MaxHealth / 5000f));
             //float adjustedTransformerIncrease = baseTransformerIncrease - (float)Math.Pow(Transformers, 1.3f);
-            float adjustedTransformerIncrease = baseTransformerIncrease - Mathf.Min((Transformers * 1.31f), (float)Math.Pow(Transformers, 1.252f));
-            adjustedTransformerIncrease /= 5f;
-            if (Transformers == 0) adjustedTransformerIncrease = 0f;
+            float adjustedTransformerIncrease = baseTransformerIncrease - Mathf.Min((Transformers * 1.4f), (float)Math.Pow(Transformers, 1.3f));
+            //adjustedTransformerIncrease /= 3f;
+            if (Transformers == 0) adjustedTransformerIncrease = 1f;
 
             //if (currentClass == enumShieldClassSelection.HE) { MaxHealth *= 1.5f; HealthBeforePowerRouting *= 1.5f; } "We will want to use these numbers";
             HealthLossFromRoutedPower = MaxHealth - HealthBeforePowerRouting;
 
-            ArmourClass = 25 + ((ShieldData.ArmourPercent / 75) * (adjustedHardenerIncrease * 3.5f));
+            ArmourClass = BaseArmourClass * (1+((ShieldData.ArmourPercent / 150) * (adjustedHardenerIncrease)));
             if (ShieldHandler.isOnFire) ArmourClass -= LastArmourReduction;
             if (ShieldHandler.SufferingFromDisruptor) ArmourClass *= (1f - DisruptionFactor);
             Math.Round(ArmourClass, 0);
             if (ArmourClass < 2) ArmourClass = 2;
             ArmourIncrease = ArmourClass - BaseArmourClass;
 
-            PassiveRegen = (MaxHealth / 700) + ((1f*((ShieldData.RegenPercent/1.7f))) * (adjustedTransformerIncrease));
+            PassiveRegen = (MaxHealth / 2000) + (ShieldData.RegenPercent * (adjustedTransformerIncrease));
             if (ShieldHandler.TargettedByContLaser) PassiveRegen *= (1f - (ShieldHandler.ContLaserRegenFactor * UnityEngine.Time.timeScale));
             if (ShieldHandler.SufferingFromDisruptor) PassiveRegen *= (1f - DisruptionFactor);
             Math.Round(PassiveRegen, 1);
