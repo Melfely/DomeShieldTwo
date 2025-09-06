@@ -33,10 +33,10 @@ namespace DomeShieldTwo.newshieldblocksystem
         {
             base.AppendToolTip(tip);
             int num = 400;
-            bool flag = this.DomeShieldBeam != null;
+            bool flag = this.PowerLink != null;
             if (flag)
             {
-                bool flag2 = this.DomeShieldBeam.MaxEnergy > 0f;
+                bool flag2 = this.PowerLink.ActualEnergy > 0f;
                 if (flag2)
                 {
                     float num2 = 1f;
@@ -49,7 +49,7 @@ namespace DomeShieldTwo.newshieldblocksystem
                 bool flag3 = this.DomeShieldBeam.MaxEnergy > 0f;
                 if (flag3)
                 {
-                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldCapacitorLinePiece._locFile.Format("Tip_PowerUse", "Power use: <<{0}>>", new object[] { this.DomeShieldBeam.PowerPerSec })));;
+                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldCapacitorLinePiece._locFile.Format("Tip_PowerUse", "Power use: <<{0}>>", new object[] { this.PowerLink.PowerPerSec })));;
                 }
             }
         }

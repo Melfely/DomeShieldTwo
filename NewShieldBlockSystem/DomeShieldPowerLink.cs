@@ -84,6 +84,7 @@ namespace DomeShieldTwo.newshieldblocksystem
             float num = totalCapSize * (20 * mult);
             num += (spoofers * (300 * mult));
             int num2 = Rounding.FloatToInt(num);
+            ActualEnergy = (float)num2;
             return num2;
         }
         public float GetPowerMultiplier()
@@ -236,5 +237,6 @@ namespace DomeShieldTwo.newshieldblocksystem
         public float LocalEnergyBeforeMods;
         public int OverchargersOnLink;
         public int RectifiersOnLink;
+        public float ActualEnergy;
     }
 }
