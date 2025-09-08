@@ -724,16 +724,19 @@ namespace AdvShields
                 request.IdealPower = ((float)((TransformData.Length * TransformData.Width * TransformData.Height * 0.006f) + 200f) * (float)Math.Round(SettingsData.ExcessDrive / 2.25f + 0.5555f, 1) / ShieldCircleness) * (1f - ((1f - ShieldStats.ActiveRectifierSavingsPercent * 0.5f)));
                 PowerDrawDifference = (float)(((TransformData.Length * TransformData.Width * TransformData.Height * 0.006f) + 200f * ShieldCircleness) + (ShieldStats.PassiveRegen * 1.5f)) - (float)((TransformData.Length * TransformData.Width * TransformData.Height * 0.00499999988824129) + 200f * (float)Math.Round(SettingsData.ExcessDrive / 2.25f + 0.5555f, 1) * ShieldCircleness) * (1f - ((1f - ShieldStats.ActiveRectifierSavingsPercent * 0.5f)));
                 */
-                request.IdealPower = power + ShieldSizePower / ShieldCircleness;
-                if (ShieldHandler.TimeAtFullHealth > 45) request.IdealPower /= 10;
+
+                //this is no regen just combat or idle modes
+                request.IdealPower = (power + ShieldSizePower / ShieldCircleness) * AdvShieldSettingsData.IdleEPPMulti;
             }
             else if (ShieldHandler.isActiveRegen)
             {
-                request.IdealPower = (power + ShieldSizePower / ShieldCircleness) * 2f;
+                //This is active regen
+                request.IdealPower = (power + ShieldSizePower / ShieldCircleness) * AdvShieldSettingsData.ActiveRegenEPPMulti;
             }
             else
             {
-                request.IdealPower = (power + ShieldSizePower / ShieldCircleness) * 1.2f;
+                //This is passive regen mode effectively
+                request.IdealPower = (power + ShieldSizePower / ShieldCircleness) * AdvShieldSettingsData.PassiveRegenEPPMulti;
                 /*
                 request.IdealPower = ((float)(((TransformData.Length * TransformData.Width * TransformData.Height * 0.006f) + 200f) + (ShieldStats.PassiveRegen * 1.5f) * (float)Math.Round(SettingsData.ExcessDrive / 2.25f + 0.5555f, 1) / ShieldCircleness)) * ShieldStats.ActiveRectifierSavingsPercent;
                 PowerDrawDifference = ((float)(((TransformData.Length * TransformData.Width * TransformData.Height * 0.006f) + 200f) + (ShieldStats.PassiveRegen * 1.5f) * (float)Math.Round(SettingsData.ExcessDrive / 2.25f + 0.5555f, 1) * ShieldCircleness - (float)(((TransformData.Length * TransformData.Width * TransformData.Height * 0.006f) + 200f) * (float)Math.Round(SettingsData.ExcessDrive / 2.25f + 0.5555f, 1) * ShieldCircleness))) * ShieldStats.ActiveRectifierSavingsPercent;
