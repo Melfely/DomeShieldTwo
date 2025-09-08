@@ -137,13 +137,13 @@ namespace DomeShieldTwo
 
                 if (ShieldHandler.CurrentDamageSustained <= 0)
                 {
-                    EPPModeMulti = AdvShieldSettingsData.IdleEPPMulti;
+                    EPPModeMulti = 1.0f; //Base cost of keeping the shield *stable*
                 } else if (ShieldHandler.isActiveRegen)
                 {
-                    EPPModeMulti = AdvShieldSettingsData.ActiveRegenEPPMulti;
+                    EPPModeMulti = DomeShieldConstants.ActiveRegenEPPMulti / DomeShieldConstants.IdleEPPMulti;
                 } else
                 {
-                    EPPModeMulti = AdvShieldSettingsData.PassiveRegenEPPMulti;
+                    EPPModeMulti = DomeShieldConstants.PassiveRegenEPPMulti / DomeShieldConstants.IdleEPPMulti;
                 }
 
                 float mainEPP = Math.Min(1.0f, EPP * EPPModeMulti);

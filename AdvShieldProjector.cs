@@ -517,10 +517,9 @@ namespace AdvShields
             //tip.Add(new ProTipSegment_Text(400, $"SHIELD CLASS: {SettingsData.ShieldClass}"), BrilliantSkies.Ui.Tips.Position.Middle);
             tip.Add(new ProTipSegment_Text(400, $"Surface area {(int)ShieldHandler.Shape.SurfaceArea()} m2"), BrilliantSkies.Ui.Tips.Position.Middle);
             tip.Add(new ProTipSegment_Text(400, $"This shield dome has {(int)currentHealth}/{(int)ShieldStats.MaxHealth} health"), BrilliantSkies.Ui.Tips.Position.Middle);
-            tip.Add(new ProTipSegment_Text(400, $"This shield dome has {ShieldStats.ArmourClass} armor class (minimum 2)."), BrilliantSkies.Ui.Tips.Position.Middle);
+            tip.Add(new ProTipSegment_Text(400, $"This shield dome has {ShieldStats.ArmourClass} armor class (minimum 10)."), BrilliantSkies.Ui.Tips.Position.Middle);
             tip.Add(new ProTipSegment_Text(400, $"This shield dome has a passive regen of {ShieldStats.PassiveRegen} each second. " /* (Minimum 50, maximum 500000).*/ + $"Active regeneration takes {ShieldStats.ActualWaitTime} to begin."), BrilliantSkies.Ui.Tips.Position.Middle);
             tip.Add(new ProTipSegment_Text(400, $"This shield dome has {ShieldStats.Hardeners} Hardeners and {ShieldStats.Transformers} Transformers attatched. See the stats page for more info."), BrilliantSkies.Ui.Tips.Position.Middle);
-            if (ShieldHandler.TimeAtFullHealth > 45) tip.Add(new ProTipSegment_Text(400, "<color=green>Shield has not taken any damage for a considerable time. Power use is divided by 10 until damage is taken again (this is a buff).</color>"), BrilliantSkies.Ui.Tips.Position.Middle);
             if (Node.ConnectedCard.ToLower() != "none") tip.Add(new ProTipSegment_Text(400, $"This shield has a matrix computer with a {Node.ConnectedCard} card attached."), BrilliantSkies.Ui.Tips.Position.Middle);
             if (ShieldHandler.TargettedByContLaser) tip.Add(new ProTipSegment_Text(400, "<color=yellow>Shield is currently being attacked by a continuous laser. Regen capabilities are negatively affected.</color>"), BrilliantSkies.Ui.Tips.Position.Middle);
             if (ShieldHandler.SufferingFromDisruptor) tip.Add(new ProTipSegment_Text(400, $"<color=red>Shield is currently suffering from disruption! This is severely impacting regeneration and armor class! They are multiplied by {1f-ShieldStats.DisruptionFactor}.</color>"), BrilliantSkies.Ui.Tips.Position.Middle);
@@ -726,17 +725,17 @@ namespace AdvShields
                 */
 
                 //this is no regen just combat or idle modes
-                request.IdealPower = (power + ShieldSizePower / ShieldCircleness) * AdvShieldSettingsData.IdleEPPMulti;
+                request.IdealPower = (power + ShieldSizePower / ShieldCircleness) * DomeShieldConstants.IdleEPPMulti;
             }
             else if (ShieldHandler.isActiveRegen)
             {
                 //This is active regen
-                request.IdealPower = (power + ShieldSizePower / ShieldCircleness) * AdvShieldSettingsData.ActiveRegenEPPMulti;
+                request.IdealPower = (power + ShieldSizePower / ShieldCircleness) * DomeShieldConstants.ActiveRegenEPPMulti;
             }
             else
             {
                 //This is passive regen mode effectively
-                request.IdealPower = (power + ShieldSizePower / ShieldCircleness) * AdvShieldSettingsData.PassiveRegenEPPMulti;
+                request.IdealPower = (power + ShieldSizePower / ShieldCircleness) * DomeShieldConstants.PassiveRegenEPPMulti;
                 /*
                 request.IdealPower = ((float)(((TransformData.Length * TransformData.Width * TransformData.Height * 0.006f) + 200f) + (ShieldStats.PassiveRegen * 1.5f) * (float)Math.Round(SettingsData.ExcessDrive / 2.25f + 0.5555f, 1) / ShieldCircleness)) * ShieldStats.ActiveRectifierSavingsPercent;
                 PowerDrawDifference = ((float)(((TransformData.Length * TransformData.Width * TransformData.Height * 0.006f) + 200f) + (ShieldStats.PassiveRegen * 1.5f) * (float)Math.Round(SettingsData.ExcessDrive / 2.25f + 0.5555f, 1) * ShieldCircleness - (float)(((TransformData.Length * TransformData.Width * TransformData.Height * 0.006f) + 200f) * (float)Math.Round(SettingsData.ExcessDrive / 2.25f + 0.5555f, 1) * ShieldCircleness))) * ShieldStats.ActiveRectifierSavingsPercent;

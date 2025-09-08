@@ -29,5 +29,10 @@ namespace DomeShieldTwo.newshieldblocksystem
         public static float ACPerHardener = 50f;
 
         public static float HealthPerEnergy = 1f;
+
+        public static float ActiveRegenEPPMulti = 2f;
+        public static float PassiveRegenEPPMulti = 1.0f;
+        public static float IdleEPPMulti = .1f;
+
     }
 }

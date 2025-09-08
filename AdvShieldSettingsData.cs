@@ -11,9 +11,6 @@ namespace AdvShields
 {
     public class AdvShieldSettingsData : DataPackage
     {
-        public static float ActiveRegenEPPMulti = 2f;
-        public static float PassiveRegenEPPMulti = 1.0f;
-        public static float IdleEPPMulti = .1f;
 
         public AdvShieldSettingsData(uint uniqueId) : base(uniqueId)
         {
