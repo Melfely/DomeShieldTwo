@@ -136,12 +136,27 @@ namespace DomeShieldTwo
         private void AffectNumbersByAvailableEnginePower()
         {
             float EPP = controller.PowerUse.FractionOfPowerRequestedThatWasProvided;
+            float EPPModeMulti = 0.0f;
             if (EPP < 1)
             { 
                 NotEnoughEnergy = true;
-                if (!ShieldHandler.isActiveRegen) MaxHealth *= EPP;
-                ArmourClass *= EPP;
-                PassiveRegen *= (EPP / 1.5f);
+
+                if (ShieldHandler.CurrentDamageSustained <= 0)
+                {
+                    EPPModeMulti = 1.0f; //Base cost of keeping the shield *stable*
+                } else if (ShieldHandler.isActiveRegen)
+                {
+                    EPPModeMulti = DomeShieldConstants.ActiveRegenEPPMulti / DomeShieldConstants.IdleEPPMulti;
+                } else
+                {
+                    EPPModeMulti = DomeShieldConstants.PassiveRegenEPPMulti / DomeShieldConstants.IdleEPPMulti;
+                }
+
+                float mainEPP = Math.Min(1.0f, EPP * EPPModeMulti);
+                MaxHealth *= mainEPP;
+                ArmourClass *= mainEPP;
+
+                PassiveRegen *= EPP;
             }
             else NotEnoughEnergy = false;
         }

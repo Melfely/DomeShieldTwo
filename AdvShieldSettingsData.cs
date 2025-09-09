@@ -11,6 +11,7 @@ namespace AdvShields
 {
     public class AdvShieldSettingsData : DataPackage
     {
+
         public AdvShieldSettingsData(uint uniqueId) : base(uniqueId)
         {
         }

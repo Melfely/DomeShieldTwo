@@ -1,0 +1,26 @@
+﻿A list of things to do on the Dome Shield. Mark complete or incomplete with a Y / N (as in, "Is this done?")
+Some abbreviations: Energy Cost (EC), Armour Class (AC), Diverted Energy (DE),
+
+-Change armour class system:						N
+	-Change slider to set AC						N
+	-Energy cost (EC) for AC is based on set AC		N
+	-EC is lowered by Hardeners						N
+	-Hardener effectiveness based on MaxEnergy		N
+
+-Adjust Regen System:								N
+	-Don't let slider bring DE below 90%			N
+	-Better balancing / softcaps at high regen		N
+	-Prevent UI Flickers (Time between modes)		N
+
+-Readjust card system:
+	-Significantly lower card drawbacks				N
+	-Slightly lower card buffs						N
+	-Consider combining certain damage types?*		N
+		*This would be to make cards more useful by affecting more than one damage type, increasing the likelyhood a player chooses to use one
+
+-Tune Spoofers:
+	-Reduce EP cost									N
+	-Increase effect								N
+
+-Double check Plasma's hit code
+	-Fix high speed shots clipping thru shield		N
