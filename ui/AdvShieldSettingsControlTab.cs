@@ -144,7 +144,7 @@ namespace DomeShieldTwo.ui
             {
                 if (!_focus.ShieldStats.NotEnoughEnergy && _focus.SettingsData.IsShieldOn == enumShieldDomeState.On) return "<color=green>Shield is working normally.</color>";
                 else if (_focus.ShieldStats.NotEnoughEnergy && _focus.SettingsData.IsShieldOn == enumShieldDomeState.On) return "<color=yellow>SHIELD DOES NOT HAVE ENOUGH POWER!!! SHIELD DOME WEAKENED!!! </color>";
-                else if (_focus.SettingsData.IsShieldOn == enumShieldDomeState.On) return "<color=red> Shield has taken too much damage and has been disabled. Wait for recharge. </color>";
+                else if (_focus.SettingsData.IsShieldOn == enumShieldDomeState.Off) return "<color=red> Shield has taken too much damage and has been disabled. Wait for recharge. </color>";
                 else return "You shouldn't be seeing this text";
             }))));
             /*

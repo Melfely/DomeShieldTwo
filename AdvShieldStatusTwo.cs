@@ -35,6 +35,7 @@ namespace DomeShieldTwo
         public float BaseArmourClass = 10;
         public float BaseRegen;
         public float HealthLossFromRoutedPower;
+        public float CurrentMaxEnergy = 0;
         public float ArmourIncrease;
         public float RegenIncrease;
         public float Hardeners;
@@ -78,11 +79,11 @@ namespace DomeShieldTwo
             ShieldEmpSusceptibility = 1f;
             ShieldEmpResistivity = 0f;
             ShieldEmpDamageFactor = 2f; //base is 2 so that EMP doesn't deal less damage than other warheads.
-            int mE = SetShieldNumbers(node);
-            HealthBeforePowerRouting = mE;
-            BaseRegen = mE / 700;
-            MaxHealth = mE * (1f - ((ShieldData.ArmourPercent + ShieldData.RegenPercent) / 100f));
-            if (MaxHealth == 0 && mE > 0) MaxHealth = 1f;
+            CurrentMaxEnergy = SetShieldNumbers(node);
+            HealthBeforePowerRouting = CurrentMaxEnergy;
+            BaseRegen = CurrentMaxEnergy / 700;
+            MaxHealth = CurrentMaxEnergy * (1f - ((ShieldData.ArmourPercent + ShieldData.RegenPercent) / 100f));
+            if (MaxHealth == 0 && CurrentMaxEnergy > 0) MaxHealth = 1f;
 
             CombinedRoutedPowerPercent = ShieldData.ArmourPercent + ShieldData.RegenPercent;
 
@@ -92,11 +93,12 @@ namespace DomeShieldTwo
 
             //if (Hardeners == 1) adjustedHardenerIncrease = 1.8f;
 
-            float baseTransformerIncrease = (Transformers * (MaxHealth / 5000f));
+            float baseTransformerIncrease = (Transformers * ((CurrentMaxEnergy * (.1f+(MaxHealth / CurrentMaxEnergy))) / 8000f));
             //float adjustedTransformerIncrease = baseTransformerIncrease - (float)Math.Pow(Transformers, 1.3f);
-            float adjustedTransformerIncrease = baseTransformerIncrease - Mathf.Min((Transformers * 1.4f), (float)Math.Pow(Transformers, 1.3f));
-            //adjustedTransformerIncrease /= 3f;
-            if (Transformers == 0) adjustedTransformerIncrease = 1f;
+            //float adjustedTransformerIncrease = baseTransformerIncrease - Mathf.Min((float)(Math.Pow(Transformers, 1.02f) * 1.6f), (float)Math.Pow(Transformers, 1.3f));
+            float adjustedTransformerIncrease = baseTransformerIncrease * Mathf.Pow((Mathf.Max((Transformers / Mathf.Pow(Transformers, 1.1f)), 0.5f)), .95f);
+            adjustedTransformerIncrease /= 2f;
+            if (Transformers == 0 || adjustedTransformerIncrease < 1f) adjustedTransformerIncrease = 1f;
 
             //if (currentClass == enumShieldClassSelection.HE) { MaxHealth *= 1.5f; HealthBeforePowerRouting *= 1.5f; } "We will want to use these numbers";
             HealthLossFromRoutedPower = MaxHealth - HealthBeforePowerRouting;
@@ -108,7 +110,11 @@ namespace DomeShieldTwo
             if (ArmourClass < 2) ArmourClass = 2;
             ArmourIncrease = ArmourClass - BaseArmourClass;
 
-            PassiveRegen = (MaxHealth / 2000) + (ShieldData.RegenPercent * (adjustedTransformerIncrease));
+            float PassiveRegenBeforePercent = (CurrentMaxEnergy / 2000) + (adjustedTransformerIncrease - 1);
+            PassiveRegenBeforePercent *= 2;
+            if (PassiveRegenBeforePercent > (MaxHealth / 20)) PassiveRegenBeforePercent = MaxHealth / 20;
+            PassiveRegen = PassiveRegenBeforePercent * (1+(Mathf.Pow(ShieldData.RegenPercent, 1.2f)/(6f - (ShieldData.RegenPercent / 40))));
+            //WHAT WE CURRENTLY HAVE IS PRETTY GOOD. DON'T MAKE SIGNIFICANT CHANGES WITHOUT KNOWING WHAT YOU ARE DOING AND PRESERVING THIS^
             if (ShieldHandler.TargettedByContLaser) PassiveRegen *= (1f - (ShieldHandler.ContLaserRegenFactor * UnityEngine.Time.timeScale));
             if (ShieldHandler.SufferingFromDisruptor) PassiveRegen *= (1f - DisruptionFactor);
             Math.Round(PassiveRegen, 1);
@@ -133,12 +139,11 @@ namespace DomeShieldTwo
             if (EPP < 1)
             { 
                 NotEnoughEnergy = true;
-                MaxHealth *= EPP;
+                if (!ShieldHandler.isActiveRegen) MaxHealth *= EPP;
                 ArmourClass *= EPP;
                 PassiveRegen *= (EPP / 1.5f);
             }
             else NotEnoughEnergy = false;
-
         }
 
         public void AdjustArmourNow(float oxidizer)

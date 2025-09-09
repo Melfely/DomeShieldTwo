@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Diagnostics;
+using DomeShieldTwo.NewShieldBlockSystem;
 
 namespace DomeShieldTwo.newshieldblocksystem
 {
@@ -40,22 +41,28 @@ namespace DomeShieldTwo.newshieldblocksystem
                 if (flag2)
                 {
                     float num2 = 1f;
-                    string text = DomeShieldCapacitorLinePiece._locFile.Format("Tip_BeamEnergy", "Energy in this line: <<{0}>>", new object[]
+                    string text = DomeShieldCapacitorLinePiece._locFile.Format("Tip_BeamEnergy", "Energy in the power link: <<{0}>>", new object[]
                     {
-                    Rounding.R0(this.DomeShieldBeam.MaxEnergy).ToString()
+                    Rounding.R0(this.PowerLink.ActualEnergy).ToString()
                     });
                     tip.Add(Position.Middle, new ProTipSegment_Text(num, text));
                 }
-                bool flag3 = this.DomeShieldBeam.MaxEnergy > 0f;
-                if (flag3)
+                int power = this.PowerLink.PowerPerSec;
+                if (power > 0)
                 {
-                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldCapacitorLinePiece._locFile.Format("Tip_PowerUse", "Power use: <<{0}>>", new object[] { this.PowerLink.PowerPerSec })));;
+                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldCapacitorLinePiece._locFile.Format("Tip_PowerUse", "Power use: <<{0}>>", new object[] { power})));;
                 }
+                if (this is DomeShieldCapacitor) tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldCapacitorLinePiece._locFile.Format("Tip_CapEnergy", "Energy in the system: <<{0}>>", new object[] { this.PowerLink.Node.projector.ShieldStats.CurrentMaxEnergy})));
+                else if (this is DomeShieldHardener) tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldCapacitorLinePiece._locFile.Format("Tip_HardenerAC", "System AC: <<{0}>>", new object[] { this.PowerLink.Node.projector.ShieldStats.ArmourClass})));
+                else if (this is DomeShieldTransformer) tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldCapacitorLinePiece._locFile.Format("Tip_TransformerReg", "System Passive Regen: <<{0}>>", new object[] { this.PowerLink.Node.projector.ShieldStats.PassiveRegen })));
+                else if (this is DomeShieldOvercharger || this is DomeShieldActiveRectifier) tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldCapacitorLinePiece._locFile.Format("Tip_PowerModMult", "Power Link's total power modifier: <<{0}>>", new object[] { this.PowerLink.GetPowerMultiplier() })));
+                else if (this is DomeShieldSpoofer) tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldCapacitorLinePiece._locFile.Format("Tip_TransformerReg", "System Active Wait Time: <<{0}>>", new object[] { this.PowerLink.Node.projector.ShieldStats.ActualWaitTime })));
             }
         }
         public override void FeelerFlowDown(DomeShieldFeeler feeler)
         {
             this.DomeShieldBeam = feeler.CurrentDSBeam;
+            this.PowerLink = feeler.CurrentDSPL;
         }
 
         public DomeShieldCapacitorLinePiece()

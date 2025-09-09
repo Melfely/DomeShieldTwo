@@ -237,10 +237,7 @@ namespace AdvShields
             */
             foreach (DomeShieldPowerLink dSPL in this.Node.dSPLs)
             {
-                foreach (DomeShieldBeamInfo beam in dSPL.dSBeamInfo)
-                {
-                    num += beam.PowerPerSec;
-                }
+                num += dSPL.PowerPerSec;
             }
             if (this.Node.matrixComputer != null)
             {

@@ -22,7 +22,7 @@ namespace DomeShieldTwo.newshieldblocksystem
         //Notice that the following are all static. I have deleted all that won't be a factor, so you will see less.
         //THESE ARE ALL PUBLIC STATICS. THE NAMES MUST BE CHANGED SLIGHTLY.
 
-        public static float BaseDSCapacitorSize = 1500f;
+        public static float BaseDSCapacitorSize = 750f;
 
         public static float BaseAC = 20;
 

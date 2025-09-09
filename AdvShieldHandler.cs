@@ -169,9 +169,9 @@ namespace AdvShields
             }
             if (shell.ExplosiveCharges.GetExplosionDamage() > 0) ApplyHEDamage(shell.ExplosiveCharges.GetExplosionDamage(), position);
             if (shell.ExplosiveCharges.GetFlakExplosionDamage() > 0) ApplyFlakDamage(shell.ExplosiveCharges.GetFlakExplosionDamage(), position);
-            if (shell.ExplosiveCharges.GetEmpDamage() > 0) ApplyEmpDamage(new EmpDamageDescription(gunner, shell.ExplosiveCharges.GetEmpDamage()), position);
+            if (shell.ExplosiveCharges.GetEmpDamage() > 0) ApplyEmpDamage(shell.ExplosiveCharges.GetEmpDamage(), position);
             if (shell.ExplosiveCharges.GetIncendiaryFuel() > 0) HandleNonFlamethrowerFireHit(shell.ExplosiveCharges.GetIncendiaryFuel(), shell.ExplosiveCharges.GetIncendiaryIntensity(), shell.ExplosiveCharges.GetIncendiaryOxidizer());
-            if (shell.ExplosiveCharges.GetFragCount() > 0) HandleFrag(shell.ExplosiveCharges.GetFragDamage(), shell.ExplosiveCharges.GetFragCount(), shell.ExplosiveCharges.GetFragAngle(), position);
+            if (shell.ExplosiveCharges.GetFragCount() > 0) { float angle = shell.ExplosiveCharges.GetFragAngle(); HandleFrag(shell.ExplosiveCharges.GetFragDamage() * FragGenerator.GetAngleDamageMultiplier(angle), shell.ExplosiveCharges.GetFragCount(), angle, position); }
             if (shell.KineticDamage.ApplyAsMeleeDamage()) ApplyThumpDamage(shell.KineticDamage.GetKineticDamage(), shell.ArmourPierce.GetArmourPiercing(), position);
             else ApplyPierceDamage(shell.KineticDamage.GetKineticDamage(), shell.ArmourPierce.GetArmourPiercing(), position);
         }
@@ -180,7 +180,7 @@ namespace AdvShields
         {
             //This should work for cram. Weird that it doesn't for APS, but, whatever x-x
             if (state.ExplosiveDamage > 0) ApplyHEDamage(state.ExplosiveDamage, position);
-            if (state.EmpDamage > 0) ApplyEmpDamage(new EmpDamageDescription(state.Gunner, state.EmpDamage), position);
+            if (state.EmpDamage > 0) ApplyEmpDamage(state.EmpDamage, position);
             if (state.FireFuel > 0) HandleNonFlamethrowerFireHit(state.FireFuel, state.FireIntensity, state.FireOxidizer);
             if (state.FragCount > 0) HandleFrag(state.FragDamage, state.FragCount, state.FragAngle, position);
             if (state.ApplyAsMeleeDamage) ApplyThumpDamage(state.KineticDamage, state.ArmourPiercing, position);
@@ -207,8 +207,9 @@ namespace AdvShields
                 controller.ShieldDome.gameObject.GetComponent<MeshRenderer>().enabled = false;
             }
             if (!this.controller.OnPlayerTeam) DamageHelp.DisplayDamageMarker(Rounding.FloatToInt(realDamage), DamageType.Laser, GAME_STATE.MyTeam);
-            AdjustTimeSinceLastHit(realDamage);
-            float remainingHealthFraction = Mathf.Clamp01((maxEnergy - CurrentDamageSustained) / maxEnergy);
+            if (isContinuous) AdjustTimeSinceLastHit(realDamage * 5);
+            else AdjustTimeSinceLastHit(realDamage);
+                float remainingHealthFraction = Mathf.Clamp01((maxEnergy - CurrentDamageSustained) / maxEnergy);
             Color hitColor = Color.Lerp(Color.red, Color.green, remainingHealthFraction);
             //Don't forget to include the position
             CreateAnimation(position, Mathf.Max(realDamage, 1), hitColor);
@@ -221,12 +222,14 @@ namespace AdvShields
             Math.Clamp(laserPercentForRegen, 0, 1);
             ContLaserRegenFactor += laserPercentForRegen;
             laserStorage.Add(new ContLaserInstance(laserPercentForRegen, 0.1f));
+            if (TimeSinceLastHit > stats.ActualWaitTime - 1) ; TimeSinceLastHit = stats.ActualWaitTime = 1;
         }
         public void ApplyThumpDamage(float damage, float AP, Vector3 position)
         {
             float armorMod = AP / stats.ArmourClass;
             float realDamage = damage;
             if (armorMod < 1) realDamage *= armorMod;
+            realDamage *= 1.1f; //A very minor buff to thump damage since it's kind of kinetic
             realDamage *= GetCardMult("Thump");
             //AdvLogger.LogInfo($"Thump damage after all mults: {realDamage}", LogOptions._AlertDevInGame);
             CurrentDamageSustained += realDamage;
@@ -250,6 +253,7 @@ namespace AdvShields
             float armorMod = AP / stats.ArmourClass;
             float realDamage = damage;
             if (armorMod < 1) realDamage *= armorMod;
+            realDamage *= 1.2f; //Slightly increasing pierce damage to the shield because it's pierce
             realDamage *= GetCardMult("Pierce");
             //AdvLogger.LogInfo($"Pierce damage after all mults: {realDamage}", LogOptions._AlertDevInGame);
             CurrentDamageSustained += realDamage;
@@ -285,9 +289,11 @@ namespace AdvShields
 
         public void HandleFrag(float damage, int count, float angle, Vector3 position)
         {
+            AdvLogger.LogInfo($"{damage}, {count}, {angle}");
             float realDamage = CalculateActualFragDamage(damage, count, angle);
             float armorMod = 4 / stats.ArmourClass;
             realDamage *= armorMod;
+            realDamage /= 1.25f; //Was 1.5, now 1.25 for the slight kinetic damage buff
 
             realDamage *= GetCardMult("Pierce");
             //AdvLogger.LogInfo($"Frag damage after all mults: {realDamage}", LogOptions._AlertDevInGame);
@@ -350,7 +356,7 @@ namespace AdvShields
         private float CalculateActualHEDamage(float damage, AdvShieldStatusTwo stats)
         {
             float realDamage = damage;
-            realDamage *= 0.8f;
+            //realDamage *= 0.8f;
             float divisor = (2f / 59f) * stats.ArmourClass + (57f / 59f);
             realDamage /= divisor;
             //This feels a bit low?
@@ -361,16 +367,16 @@ namespace AdvShields
         {
             ApplyHEDamage (damage/2, position);
         }
-        public void ApplyEmpDamage(EmpDamageDescription dd, Vector3 position)
+        public void ApplyEmpDamage(float empdamage, Vector3 position)
         {
             //This looks a little outdated...
             AdvShieldStatusTwo stats = controller.ShieldStats;
-            float empdamage = dd.CalculateEmpDamage(GetCurrentHealth(), stats.ShieldEmpSusceptibility, stats.ShieldEmpResistivity, stats.ShieldEmpDamageFactor);
             //Adding card mult, still think the method is outdated
             empdamage *= GetCardMult("EMP");
             //AdvLogger.LogInfo($"EMP damage after all mults: {empdamage}", LogOptions._AlertDevInGame);
             //card mult
-            CurrentDamageSustained += empdamage * controller.SurfaceFactor;
+            empdamage *= 1.5f;
+            CurrentDamageSustained += empdamage;
 
             float magnitude;
             Vector3 hitPosition;
@@ -500,9 +506,9 @@ namespace AdvShields
             ApplyHEDamage(eD.DamagePotential, position);
         }
 
-        public void ApplyEmpParticleDamage(EmpDamageDescription emD, Vector3 position)
+        public void ApplyEmpParticleDamage(float num3, Vector3 position)
         {
-            ApplyEmpDamage(emD, position);
+            ApplyEmpDamage(num3, position);
         }
 
         public void ApplyThumpParticleDamage (float num3, float ap, Vector3 position)

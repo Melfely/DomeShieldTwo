@@ -57,6 +57,7 @@ namespace DomeShieldTwo.newshieldblocksystem
         public int CalculateActualEnergyAndPowerModifier()
         {
             int hardeners = 0;
+            float eng = 0;
             int transformers = 0;
             int overchargers = 0;
             int ARs = 0;
@@ -70,6 +71,7 @@ namespace DomeShieldTwo.newshieldblocksystem
                 num3 += beamInfo.DamagePerSec;
                 num4 += beamInfo.GetDamageThisFrame();
                 */
+                eng += beamInfo.MaxEnergy;
                 hardeners += beamInfo.Hardeners;
                 transformers += beamInfo.Transformers;
                 overchargers += beamInfo.Overchargers;
@@ -82,9 +84,9 @@ namespace DomeShieldTwo.newshieldblocksystem
             RectifiersOnLink = ARs;
             float mult = GetPowerMultiplier();
             float num = totalCapSize * (20 * mult);
-            num += (spoofers * (300 * mult));
+            num += (spoofers * (125 * mult)); //original was 300 * mult, we've halved it to 150 for now.
             int num2 = Rounding.FloatToInt(num);
-            ActualEnergy = (float)num2;
+            ActualEnergy = eng * mult;
             return num2;
         }
         public float GetPowerMultiplier()
@@ -119,7 +121,6 @@ namespace DomeShieldTwo.newshieldblocksystem
             base.AppendToolTip(tip);
             tip.SetSpecial_Name(DomeShieldPowerLink._locFile.Get("SpecialName", "Dome Shield Power Link", true), DomeShieldPowerLink._locFile.Get("SpecialDescription", "Connects dome shield cavities and modifiers to the controller block. Components attatched to this link will use Engine power.", true));
             int num = 400;
-            float PPS = 0f;
             int hardeners = 0;
             int transformers = 0;
             int overchargers = 0;
@@ -135,7 +136,7 @@ namespace DomeShieldTwo.newshieldblocksystem
                     string text = DomeShieldPowerLink._locFile.Format("String_Energy", "Beam {0} energy: {1}", new object[]
                     {
                     i.ToString(),
-                    Mathf.Round(beamInfo.MaxEnergy).ToString()
+                    Mathf.Round(beamInfo.MaxEnergy * GetPowerMultiplier()).ToString()
                     });
                     tip.Add(Position.Middle, new ProTipSegment_Text(num, text));
                 }
@@ -143,7 +144,6 @@ namespace DomeShieldTwo.newshieldblocksystem
                 {
                     tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldPowerLink._locFile.Format("Tip_BeamWithModsNoCaps", "beam {0} has no capacitors but has modifiers attached", new object[] { i.ToString() })));
                 }
-                    PPS += (float)beamInfo.PowerPerSec;
                 /*
                 num3 += beamInfo.DamagePerSec;
                 num4 += beamInfo.GetDamageThisFrame();
@@ -155,7 +155,7 @@ namespace DomeShieldTwo.newshieldblocksystem
                 spoofers += beamInfo.Spoofers;
                 LBs += beamInfo.TotalBlocks;
             }
-            tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldPowerLink._locFile.Format("Tip_PowerUse", "Power use: <<{0}>>", new object[] { PPS })));
+            tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldPowerLink._locFile.Format("Tip_PowerUse", "Power use: <<{0}>>", new object[] { PowerPerSec })));
             tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldPowerLink._locFile.Format("Tip_Hardeners", "Hardeners: <<{0}>>", new object[] { hardeners })));
             tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldPowerLink._locFile.Format("Tip_Transformers", "Transformers: <<{0}>>", new object[] { transformers })));
             tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldPowerLink._locFile.Format("Tip_Overchargers", "Overchargers: <<{0}>>", new object[] { overchargers })));

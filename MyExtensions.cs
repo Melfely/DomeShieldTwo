@@ -46,6 +46,8 @@ using BrilliantSkies.Ui.Consoles.Interpretters.Subjective;
 using BrilliantSkies.Ui.Consoles.Segments;
 using BrilliantSkies.Ui.Tips;
 using DomeShieldTwo.newshieldblocksystem;
+using FtdRequirements.PathfindingAndCollisionAvoidance;
+using FtdRequirements.PlanetSavingAndLoading;
 using HarmonyLib;
 using MoonSharp.Interpreter;
 using System;
@@ -296,8 +298,7 @@ namespace AdvShields
                             item.ShieldHandler.ApplyExplosiveParticleDamage(explosionDamageDescription, hitPosition);
                             break;
                         case ParticleType.Emp:
-                            EmpDamageDescription emD = new EmpDamageDescription(damageLogger, num3);
-                            item.ShieldHandler.ApplyEmpParticleDamage(emD, hitPosition);
+                            item.ShieldHandler.ApplyEmpParticleDamage(num3, hitPosition);
                             break;
                         case ParticleType.Impact:
                             KineticDamageDescription kineticDamageDescription = new KineticDamageDescription(damageLogger, num3, ParticleCannonConstants.ImpactAp, true);
@@ -550,6 +551,15 @@ namespace AdvShields
                     if (magnitude > rayDistance)
                     {
                         //AdvLogger.LogInfo("CRAM shell just hit the shield?");
+                        /*
+                        float power = Traverse.Create(__instance).Field("_fragPower").GetValue<float>();
+                        AdvLogger.LogInfo("power is " + power);
+                        */
+                        float whyIsItLikeThis = (__instance._pState.FragDamage * __instance._pState.FragCount) * 3000f;
+                        float seriouslyWhy = (whyIsItLikeThis / (float)__instance._pState.FragCount);
+                        float iHaveManyQuestions = Rounding.R0(seriouslyWhy * FragGenerator.GetAngleDamageMultiplier(__instance._pState.FragAngle));
+                        __instance._pState.FragDamage = iHaveManyQuestions;
+                        //I'm not kidding this is actually how FTD gets its frag damage.
                         item.ShieldHandler.HandleGenericCRAMAndSimpleHit(__instance._pState, hitPosition);
                         if (__instance._pState.ExplosiveDamage > 0)
                         {
@@ -800,7 +810,7 @@ namespace AdvShields
                 //item.ShieldHandler.ApplyDamage(new EmpDamageDescription(_missile.Gunner, empDamage));
                 if (hasEMP)
                 {
-                    item.ShieldHandler.ApplyEmpDamage(new EmpDamageDescription(_missile.Gunner, _missile.Blueprint.Warheads.EMPDamage), position);
+                    item.ShieldHandler.ApplyEmpDamage(_missile.Blueprint.Warheads.EMPDamage, position);
                 }
 
                 if (hasFire)
@@ -810,7 +820,8 @@ namespace AdvShields
 
                 if (hasFrag)
                 {
-                    item.ShieldHandler.HandleFrag(_missile.Blueprint.Warheads.FragmentDamage, _missile.Blueprint.Warheads.FragmentCount, _missile.Blueprint.Warheads.FragmentAngle, position);
+                    float angle = _missile.Blueprint.Warheads.FragmentAngle;
+                    item.ShieldHandler.HandleFrag(_missile.Blueprint.Warheads.FragmentDamage * FragGenerator.GetAngleDamageMultiplier(angle), _missile.Blueprint.Warheads.FragmentCount, angle, position);
                 }
 
                 if (hasHE)
@@ -819,9 +830,12 @@ namespace AdvShields
                 }
 
                 bool safetyOn = !__instance.CheckSafety(item) || !_missile.HasClearedVehicle;
+                float size = (6f * _missile.Blueprint.Warheads.ExplosiveDamage / 10000);
+                //AdvLogger.LogInfo(size.ToString(), LogOptions._AlertDevInGame);
+                ExplosionVisualiser.Instance.MakeExplosion(size, hitPointIn, null, false);
                 _missile.MoveNoseIntoPosition(hitPointIn);
                 _missile.DestroyYourself();
-                _missile.ExplosionHandler.ExplodeNow(allConstructBlock, hitPointInLocal, hitPointIn, safetyOn);
+                //_missile.ExplosionHandler.ExplodeNow(allConstructBlock, hitPointInLocal, hitPointIn, safetyOn);
             }
         }
     }
