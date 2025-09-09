@@ -54,6 +54,8 @@ namespace DomeShieldTwo
         public float LastArmourReduction = 0;
         public float LastDisruptorStrength = 0;
         public float DisruptionFactor;
+        public float EnergyPercentForArmour;
+        public float BaseEnergyPercentForArmour;
         //public enumShieldClassSelection currentClass;
 
         public AdvShieldStatusTwo(AdvShieldProjector controller, float maxEnergyFactor, float armorClassFactor, float passiveRegenFactor)
@@ -81,11 +83,12 @@ namespace DomeShieldTwo
             ShieldEmpDamageFactor = 2f; //base is 2 so that EMP doesn't deal less damage than other warheads.
             CurrentMaxEnergy = SetShieldNumbers(node);
             HealthBeforePowerRouting = CurrentMaxEnergy;
+            CalculateEnergyUsedForAC();
             BaseRegen = CurrentMaxEnergy / 700;
-            MaxHealth = CurrentMaxEnergy * (1f - ((ShieldData.ArmourPercent + ShieldData.RegenPercent) / 100f));
+            MaxHealth = CurrentMaxEnergy * (1f - ((EnergyPercentForArmour + ShieldData.RegenPercent) / 100f));
             if (MaxHealth == 0 && CurrentMaxEnergy > 0) MaxHealth = 1f;
 
-            CombinedRoutedPowerPercent = ShieldData.ArmourPercent + ShieldData.RegenPercent;
+            CombinedRoutedPowerPercent = EnergyPercentForArmour + ShieldData.RegenPercent;
 
             float baseHardenerIncrease = (Hardeners * (1.3f - Math.Min(MaxHealth / 500000, 0.25f)));
             float adjustedHardenerIncrease = baseHardenerIncrease - Mathf.Min((float)Math.Pow(Hardeners * 0.15f, 1.20f), (Hardeners));
@@ -103,7 +106,7 @@ namespace DomeShieldTwo
             //if (currentClass == enumShieldClassSelection.HE) { MaxHealth *= 1.5f; HealthBeforePowerRouting *= 1.5f; } "We will want to use these numbers";
             HealthLossFromRoutedPower = MaxHealth - HealthBeforePowerRouting;
 
-            ArmourClass = BaseArmourClass * (1+((ShieldData.ArmourPercent / 150) * (adjustedHardenerIncrease)));
+            ArmourClass = ShieldData.ArmourSet;
             if (ShieldHandler.isOnFire) ArmourClass -= LastArmourReduction;
             if (ShieldHandler.SufferingFromDisruptor) ArmourClass *= (1f - DisruptionFactor);
             Math.Round(ArmourClass, 0);
@@ -131,6 +134,10 @@ namespace DomeShieldTwo
             float factor = (totalEMPDamageStored * 4) / MaxHealth;
             Math.Clamp(factor, 0.001, 0.8);
             DisruptionFactor = factor;
+        }
+        public void CalculateEnergyUsedForAC()
+        {
+            //Write this
         }
 
         private void AffectNumbersByAvailableEnginePower()

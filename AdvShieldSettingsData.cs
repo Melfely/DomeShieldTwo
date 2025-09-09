@@ -32,10 +32,10 @@ namespace AdvShields
         public Var<enumShieldClassSelection> ShieldClass { get; set; } = new Var<enumShieldClassSelection>(enumShieldClassSelection.QH);
         */
 
-        [Slider(5, "Armour: {0}%", "The % of energy diverted from health into Armour class", 0f, 50f, 0.1f, 300f)]
-        public Var<float> ArmourPercent { get; set; } = new VarFloatClamp(10, 0, 50, NoLimitMode.None);
+        [Slider(5, "Armor Class: {0}", "Set the armor class of the shield. The % of system energy needed to fulfill this will be listed below (hardeners reduce it)", 10f, 60f, 0.1f, 300f)]
+        public Var<float> ArmourSet { get; set; } = new VarFloatClamp(10, 10, 60, NoLimitMode.None);
 
-        [Slider(6, "Regen: {0}%", "The % of energy diverted from health into Regeneration statistics", 0f, 50f, 0.1f, 300f)]
+        [Slider(6, "Regen: {0}%", "The % of energy diverted from health into Regeneration statistics. Cannot bring the shield above 90% diverted energy (between this and AC)", 0f, 50f, 0.1f, 300f)]
         public Var<float> RegenPercent { get; set; } = new VarFloatClamp(10, 0, 50, NoLimitMode.None);
     }
 }
