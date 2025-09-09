@@ -1,8 +1,10 @@
 This is the example FTD Props file, that will be included with the build. Change the below path to your valid FTD install location.
-Create a copy of this file and remove the ".txt" extension (and everything above <?xml version...) and this will allow the project to find any needed imports for FTD mod Compliation
+Create a file with the same name as this one, but with just "FTD.props" as the name and file extension. 
+Then copy and paste the below XML into the file, ignoring the dashed lines.
+Make sure you updated the directory location.
 
 
----------------------------------------------
+-----------------------------------
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
