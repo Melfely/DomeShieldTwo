@@ -11,6 +11,7 @@ using AdvShields.Models;
 using DomeShieldTwo.newshieldblocksystem;
 using BrilliantSkies.Core.Logger;
 using BrilliantSkies.Core.Help;
+using BrilliantSkies.DataManagement.Vars;
 
 namespace DomeShieldTwo
 {
@@ -87,8 +88,10 @@ namespace DomeShieldTwo
             BaseRegen = CurrentMaxEnergy / 700;
             MaxHealth = CurrentMaxEnergy * (1f - ((EnergyPercentForArmour + ShieldData.RegenPercent) / 100f));
             if (MaxHealth == 0 && CurrentMaxEnergy > 0) MaxHealth = 1f;
+            float actualRegenPercent = ShieldData.RegenPercent;
+            if (EnergyPercentForArmour + ShieldData.RegenPercent > 90) actualRegenPercent = 90 - EnergyPercentForArmour;
 
-            CombinedRoutedPowerPercent = EnergyPercentForArmour + ShieldData.RegenPercent;
+            CombinedRoutedPowerPercent = EnergyPercentForArmour + actualRegenPercent;
             /*
             float baseHardenerIncrease = (Hardeners * (1.3f - Math.Min(MaxHealth / 500000, 0.25f)));
             float adjustedHardenerIncrease = baseHardenerIncrease - Mathf.Min((float)Math.Pow(Hardeners * 0.15f, 1.20f), (Hardeners));

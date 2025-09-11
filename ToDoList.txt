@@ -1,14 +1,14 @@
 ﻿A list of things to do on the Dome Shield. Mark complete or incomplete with a Y / N (as in, "Is this done?")
 Some abbreviations: Energy Cost (EC), Armour Class (AC), Diverted Energy (DE),
 
--Change armour class system:						Y Needs Testing
+-Change armour class system:						 Needs Testing
 	-Change slider to set AC						Y
 	-Energy cost (EC) for AC is based on set AC		Y
 	-EC is lowered by Hardeners						Y
 	-Hardener effectiveness based on MaxEnergy		Y
 
--Adjust Regen System:								N
-	-Don't let slider bring DE below 90%			N
+-Adjust Regen System:								
+	-Don't let slider bring DE below 90%			Y
 	-Better balancing / softcaps at high regen		N
 	-Prevent UI Flickers (Time between modes)		N
 
@@ -19,8 +19,8 @@ Some abbreviations: Energy Cost (EC), Armour Class (AC), Diverted Energy (DE),
 		*This would be to make cards more useful by affecting more than one damage type, increasing the likelyhood a player chooses to use one
 
 -Tune Spoofers:
-	-Reduce EP cost									N
-	-Increase effect								N
+	-Reduce EP cost									Y
+	-Increase effect								Y
 
 -Double check Plasma's hit code
 	-Fix high speed shots clipping thru shield		N

@@ -122,6 +122,7 @@ namespace DomeShieldTwo.ui
             standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("Currently, {0}% of the energy is being used for health. {1}% is being routed to the armour class, and {2}% is being used for regeneration", 100 - I.ShieldStats.EnergyPercentForArmour - I.SettingsData.RegenPercent, I.ShieldStats.EnergyPercentForArmour, I.SettingsData.RegenPercent))));
             standardSegment1.AddInterpretter(Quick.SliderNub(_focus.SettingsData, t => "ArmourSet", null));
             standardSegment1.AddInterpretter(Quick.SliderNub(_focus.SettingsData, (t => "RegenPercent"), null));
+            if (90 < _focus.ShieldStats.EnergyPercentForArmour + _focus.SettingsData.RegenPercent) standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("<color=yellow> You cannot divert more than 90% of the shield's energy. Please lower AC if you wish to increase Regen. </color>"))));
             standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("CURRENT HEALTH: {0}. CURRENT ARMOR CLASS: {1}. CURRENT PASSIVE REGEN: {2}", I.ShieldStats.MaxHealth, I.ShieldStats.ArmourClass, I.ShieldStats.PassiveRegen ))));
             standardSegment1.AddInterpretter(new Blank(30f));
             standardSegment1.SpaceBelow = 40f;
