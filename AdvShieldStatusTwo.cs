@@ -139,7 +139,7 @@ namespace DomeShieldTwo
         {
             BaseEnergyPercentForArmour = Mathf.Clamp01((ShieldData.ArmourSet - 10f) / (60f - 10f)) * 0.8f;
             if (BaseEnergyPercentForArmour == 0) { EnergyPercentForArmour = 0; return; }
-            float hardenerMod = (Hardeners / Mathf.Pow(Hardeners, 1.015f)) * Mathf.Clamp(300000 / CurrentMaxEnergy, 0, 1);
+            float hardenerMod = (Hardeners / Mathf.Pow(Hardeners, 1.05f)) * Mathf.Clamp(300000 / CurrentMaxEnergy, 0, 1);
             EnergyPercentForArmour = BaseEnergyPercentForArmour * hardenerMod;
         }
 
