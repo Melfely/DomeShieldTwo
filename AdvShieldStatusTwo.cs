@@ -54,8 +54,8 @@ namespace DomeShieldTwo
         public float LastArmourReduction = 0;
         public float LastDisruptorStrength = 0;
         public float DisruptionFactor;
-        public float EnergyPercentForArmour;
-        public float BaseEnergyPercentForArmour;
+        public float EnergyPercentForArmour = 0;
+        public float BaseEnergyPercentForArmour = 0;
         //public enumShieldClassSelection currentClass;
 
         public AdvShieldStatusTwo(AdvShieldProjector controller, float maxEnergyFactor, float armorClassFactor, float passiveRegenFactor)
@@ -111,7 +111,7 @@ namespace DomeShieldTwo
             if (ShieldHandler.SufferingFromDisruptor) ArmourClass *= (1f - DisruptionFactor);
             Math.Round(ArmourClass, 0);
             if (ArmourClass < 2) ArmourClass = 2;
-            ArmourIncrease = ArmourClass - BaseArmourClass;
+            //ArmourIncrease = ArmourClass - BaseArmourClass;
 
             float PassiveRegenBeforePercent = (CurrentMaxEnergy / 2000) + (adjustedTransformerIncrease - 1);
             PassiveRegenBeforePercent *= 2;
@@ -137,7 +137,7 @@ namespace DomeShieldTwo
         }
         public void CalculateEnergyUsedForAC()
         {
-            BaseEnergyPercentForArmour = Mathf.Clamp01((ShieldData.ArmourSet - 10f) / (60f - 10f)) * 0.8f;
+            BaseEnergyPercentForArmour = (Mathf.Clamp01((ShieldData.ArmourSet - 10f) / (60f - 10f)) * 0.8f) * 100;
             if (BaseEnergyPercentForArmour == 0) { EnergyPercentForArmour = 0; return; }
             float hardenerMod = (Hardeners / Mathf.Pow(Hardeners, 1.05f)) * Mathf.Clamp(300000 / CurrentMaxEnergy, 0, 1);
             EnergyPercentForArmour = BaseEnergyPercentForArmour * hardenerMod;

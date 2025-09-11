@@ -2,6 +2,7 @@
 using AdvShields.Models;
 using BrilliantSkies.Core;
 using BrilliantSkies.Core.Help;
+using BrilliantSkies.Core.Logger;
 using BrilliantSkies.Core.Serialisation.Parameters.Prototypes;
 using BrilliantSkies.DataManagement.CopyPasting;
 using BrilliantSkies.Ui.Consoles;
@@ -114,11 +115,12 @@ namespace DomeShieldTwo.ui
             */
             //StringDisplay stringDisplay2 = standardSegment1.AddInterpretter(StringDisplay.Quick("<i>Select shield class:</i>"));
             //standardSegment1.AddInterpretter(new DropDown<AdvShieldSettingsData, enumShieldClassSelection>(_focus.SettingsData, _shieldClassSelection, (I, b) => I.ShieldClass == b, (I, b) => I.ShieldClass.Us = b));
-            standardSegment1.AddInterpretter(Quick.SliderNub(_focus.SettingsData, t => "ShieldReactivationPercent", null));
-            standardSegment1.AddInterpretter(Quick.SliderNub(_focus.SettingsData, t => "ExcessDrive", null));
+            //standardSegment1.AddInterpretter(Quick.SliderNub(_focus.SettingsData, t => "ShieldReactivationPercent", null));
+            //standardSegment1.AddInterpretter(Quick.SliderNub(_focus.SettingsData, t => "ExcessDrive", null));
             StringDisplay stringDisplay3 = standardSegment1.AddInterpretter(StringDisplay.Quick("<i>Change how the energy in the system is distributed:</i>"));
+            //AdvLogger.LogInfo(_focus.ShieldStats.EnergyPercentForArmour.ToString());
             standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("Currently, {0}% of the energy is being used for health. {1}% is being routed to the armour class, and {2}% is being used for regeneration", 100 - I.ShieldStats.EnergyPercentForArmour - I.SettingsData.RegenPercent, I.ShieldStats.EnergyPercentForArmour, I.SettingsData.RegenPercent))));
-            standardSegment1.AddInterpretter(Quick.SliderNub(_focus.SettingsData, t => "ArmourPercent", null));
+            standardSegment1.AddInterpretter(Quick.SliderNub(_focus.SettingsData, t => "ArmourSet", null));
             standardSegment1.AddInterpretter(Quick.SliderNub(_focus.SettingsData, (t => "RegenPercent"), null));
             standardSegment1.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("CURRENT HEALTH: {0}. CURRENT ARMOR CLASS: {1}. CURRENT PASSIVE REGEN: {2}", I.ShieldStats.MaxHealth, I.ShieldStats.ArmourClass, I.ShieldStats.PassiveRegen ))));
             standardSegment1.AddInterpretter(new Blank(30f));
