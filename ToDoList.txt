@@ -1,11 +1,11 @@
 ﻿A list of things to do on the Dome Shield. Mark complete or incomplete with a Y / N (as in, "Is this done?")
 Some abbreviations: Energy Cost (EC), Armour Class (AC), Diverted Energy (DE),
 
--Change armour class system:						N
-	-Change slider to set AC						N
-	-Energy cost (EC) for AC is based on set AC		N
-	-EC is lowered by Hardeners						N
-	-Hardener effectiveness based on MaxEnergy		N
+-Change armour class system:						Y Needs Testing
+	-Change slider to set AC						Y
+	-Energy cost (EC) for AC is based on set AC		Y
+	-EC is lowered by Hardeners						Y
+	-Hardener effectiveness based on MaxEnergy		Y
 
 -Adjust Regen System:								N
 	-Don't let slider bring DE below 90%			N

@@ -89,11 +89,11 @@ namespace DomeShieldTwo
             if (MaxHealth == 0 && CurrentMaxEnergy > 0) MaxHealth = 1f;
 
             CombinedRoutedPowerPercent = EnergyPercentForArmour + ShieldData.RegenPercent;
-
+            /*
             float baseHardenerIncrease = (Hardeners * (1.3f - Math.Min(MaxHealth / 500000, 0.25f)));
             float adjustedHardenerIncrease = baseHardenerIncrease - Mathf.Min((float)Math.Pow(Hardeners * 0.15f, 1.20f), (Hardeners));
             if (Hardeners == 0) adjustedHardenerIncrease = 1f;
-
+            */
             //if (Hardeners == 1) adjustedHardenerIncrease = 1.8f;
 
             float baseTransformerIncrease = (Transformers * ((CurrentMaxEnergy * (.1f+(MaxHealth / CurrentMaxEnergy))) / 8000f));
@@ -137,7 +137,10 @@ namespace DomeShieldTwo
         }
         public void CalculateEnergyUsedForAC()
         {
-            //Write this
+            BaseEnergyPercentForArmour = Mathf.Clamp01((ShieldData.ArmourSet - 10f) / (60f - 10f)) * 0.8f;
+            if (BaseEnergyPercentForArmour == 0) { EnergyPercentForArmour = 0; return; }
+            float hardenerMod = (Hardeners / Mathf.Pow(Hardeners, 1.015f)) * Mathf.Clamp(300000 / CurrentMaxEnergy, 0, 1);
+            EnergyPercentForArmour = BaseEnergyPercentForArmour * hardenerMod;
         }
 
         private void AffectNumbersByAvailableEnginePower()
