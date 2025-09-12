@@ -39,7 +39,7 @@ namespace DomeShieldTwo.newshieldblocksystem
         public override BlockTechInfo GetTechInfo()
         {
             //We definitely need to adjust this...
-            return new BlockTechInfo().AddStatement(DomeShieldSpoofer._locFile.Format("TechInfo_Spoofer", "Reduces the block count for Active Regen calculations by 4 (includes this block, affected by overchargers)"));
+            return new BlockTechInfo().AddStatement(DomeShieldSpoofer._locFile.Format("TechInfo_Spoofer", "Reduces the block count for Active Regen calculations by 5 (includes this block, affected by overchargers)"));
         }
 
         public DomeShieldSpoofer()

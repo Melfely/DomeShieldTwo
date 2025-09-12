@@ -223,9 +223,9 @@ namespace DomeShieldTwo
                     effectiveTransformers += (localTransformers * adjustedOverchargerIncrease);
                     realEnergy += (localEnergy * adjustedOverchargerIncrease);
                     effectiveSpoofers += (localSpoofers * adjustedOverchargerIncrease);
-                    if ((localBlocks - ((localSpoofers * adjustedOverchargerIncrease) * 3) > 0))
+                    if ((localBlocks - ((localSpoofers * adjustedOverchargerIncrease) * 5) > 0))
                     {
-                        effectiveBlocks += (localBlocks - ((localSpoofers * adjustedOverchargerIncrease) * 3));
+                        effectiveBlocks += (localBlocks - ((localSpoofers * adjustedOverchargerIncrease) * 5));
                     }
                     //No reason to add 0, we can just ignore otherwise.
                 }
@@ -235,9 +235,9 @@ namespace DomeShieldTwo
                     effectiveTransformers += localTransformers;
                     realEnergy += localEnergy;
                     effectiveSpoofers += localSpoofers;
-                    if ((localBlocks - (localSpoofers * 3) > 0))
+                    if ((localBlocks - (localSpoofers * 5) > 0))
                     {
-                        effectiveBlocks += (localBlocks - (localSpoofers * 3));
+                        effectiveBlocks += (localBlocks - (localSpoofers * 5));
                     }
                 }
             }

@@ -85,6 +85,7 @@ namespace DomeShieldTwo.newshieldblocksystem
             float mult = GetPowerMultiplier();
             float num = totalCapSize * (20 * mult);
             num += (spoofers * (125 * mult)); //original was 300 * mult, we've halved it to 150 for now.
+            //Adjusted again to 125
             int num2 = Rounding.FloatToInt(num);
             ActualEnergy = eng * mult;
             return num2;
