@@ -137,16 +137,12 @@ namespace DomeShieldTwo.ui
             stringDisplay3.Justify = new TextAnchor?(TextAnchor.UpperLeft);
 
             CreateSpace(0);
-            standardSegment2.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("External drive factor is {0} so combined strength is {1}", I.SettingsData.ExternalDriveFactor, Rounding.R2(I.GetExcessDriveAfterFactoring()))))).SetConditionalDisplayFunction(() => _focus.SettingsData.ExternalDriveFactor < 1.0);
+            //standardSegment2.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m<AdvShieldProjector>(I => string.Format("External drive factor is {0} so combined strength is {1}", I.SettingsData.ExternalDriveFactor, Rounding.R2(I.GetExcessDriveAfterFactoring()))))).SetConditionalDisplayFunction(() => _focus.SettingsData.ExternalDriveFactor < 1.0);
             standardSegment2.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m((Func<AdvShieldProjector, string>)(I =>
             {
-                if (_focus.GetExcessDriveAfterFactoring() < 1.0)
-                    return "Drive less than 1 so the shield is deactivated";
-
                 float powerUse = Rounding.R2(_focus.PowerUse.PowerUsed);
                 float num1 = Rounding.R2(_focus.PowerUse.FractionOfPowerRequestedThatWasProvided * 100f);
-                float num2 = Rounding.R2(ShieldProjector.GetDisruptionRegenerationRate(powerUse));
-                return string.Format("Power use: {0} (working at {1}%). Disruption strength recovery at full power: {2}/s", powerUse, num1, num2);
+                return string.Format("Power use: {0} (working at {1}%).", powerUse, num1);
             }))));
             standardSegment2.AddInterpretter(SubjectiveDisplay<AdvShieldProjector>.Quick(_focus, M.m((Func<AdvShieldProjector, string>)(I =>
             {

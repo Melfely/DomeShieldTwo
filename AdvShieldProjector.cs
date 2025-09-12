@@ -480,7 +480,7 @@ namespace AdvShields
 
             float driveAfterFactoring = GetExcessDriveAfterFactoring();
             bool flag_0 = currentStrength < driveAfterFactoring;
-            string text_0 = "This shield turned off and is therefore inactive";
+            string text_0 = "This shield turned off from damage. Wait for it to regnerate.";
 
             if (SettingsData.IsShieldOn.Us == enumShieldDomeState.On)
             {
@@ -508,8 +508,6 @@ namespace AdvShields
             int num = 500;
             tip.SetSpecial(UniqueTipType.Name, new ProTipSegment_TitleSubTitle("Shield dome", "Projects a defensive shield around itself. Press Q for a lot of options."));
             this.AppendCavityStatsWithFirepower(tip, num);
-            tip.Add(new ProTipSegment_TextAdjustable(500, string.Format("Total drive {0} (basic drive {1} and an external factor of {2})", driveAfterFactoring, SettingsData.ExcessDrive, SettingsData.ExternalDriveFactor)), BrilliantSkies.Ui.Tips.Position.Middle);
-            if (flag_0) tip.Add(new ProTipSegment_TextAdjustable(500, string.Format("Charging, effective drive: {0}", Rounding.R2(currentStrength))), BrilliantSkies.Ui.Tips.Position.Middle);
             tip.Add(new ProTipSegment_TextAdjustable(500, text_0), BrilliantSkies.Ui.Tips.Position.Middle);
             //tip.Add(new ProTipSegment_Text(400, $"SHIELD CLASS: {SettingsData.ShieldClass}"), BrilliantSkies.Ui.Tips.Position.Middle);
             tip.Add(new ProTipSegment_Text(400, $"Surface area {(int)ShieldHandler.Shape.SurfaceArea()} m2"), BrilliantSkies.Ui.Tips.Position.Middle);

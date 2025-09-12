@@ -96,6 +96,8 @@ namespace AdvShields
         public float TimeAtFullHealth = 0;
 
         public bool isActiveRegen = true;
+
+        public float TimeSinceModeSwap = 1;
         public float GetCurrentHealth()
         {
             return controller.ShieldStats.MaxHealth - CurrentDamageSustained;
@@ -737,14 +739,16 @@ namespace AdvShields
         public void Update(AdvShieldStatusTwo ShieldStats)
         {
             HandleUpdateModifiers();
+            float timeThisTick = Time.deltaTime * Time.timeScale;
+            TimeSinceModeSwap += timeThisTick;
             if (!isActiveRegen)
             {
-                TimeSinceLastHit += Time.deltaTime * Time.timeScale;
+                TimeSinceLastHit += timeThisTick;
                 if (TimeSinceLastHit > ShieldStats.ActualWaitTime) isActiveRegen = true;
             }
             if (CurrentDamageSustained == 0.0f)
             {
-                TimeAtFullHealth += Time.deltaTime * Time.timeScale;
+                TimeAtFullHealth += timeThisTick;
                 return;
             }
             if ((CurrentDamageSustained <= 0.0f) && (controller.SettingsData.IsShieldOn.Us == enumShieldDomeState.On))
@@ -758,16 +762,18 @@ namespace AdvShields
             if ((CurrentDamageSustained > 0.0f) && (controller.SettingsData.IsShieldOn.Us == enumShieldDomeState.On) && (!isActiveRegen))
             {
                 if (ShieldDisabled) return;
+                if (TimeSinceModeSwap <= 0.5f) return;
                 CurrentDamageSustained -= (ShieldStats.PassiveRegen * Time.deltaTime) * Time.timeScale;
                 //AmountPassivelyRegenerated += (ShieldStats.PassiveRegen * Time.deltaTime) * Time.timeScale;
                 //We are dividing by 70 to account for how often this method runs.
-                PassiveRegenText = "Shield is using significant engine power to passively regenerate the shield";
+                PassiveRegenText = "Shield is using increased engine power to passively regenerate the shield";
                 TimeAtFullHealth = 0;
                 return;
             }
             if (!isActiveRegen) return;
             if ((CurrentDamageSustained / ShieldStats.MaxHealth <= (1-(controller.SettingsData.ShieldReactivationPercent / 100))) && (controller.SettingsData.IsShieldOn.Us == enumShieldDomeState.Off))
             {
+                if (TimeSinceModeSwap <= 0.5f) return;
                 controller.SettingsData.IsShieldOn.Us = enumShieldDomeState.On;
                 CurrentDamageSustained = ShieldStats.MaxHealth * (controller.SettingsData.ShieldReactivationPercent / 100);
                 AmountPassivelyRegenerated = 0;
@@ -777,6 +783,7 @@ namespace AdvShields
             }
             else if (CurrentDamageSustained > 0.0f)
             {
+                if (TimeSinceModeSwap <= 0.5f) return;
                 CurrentDamageSustained -= ((ShieldStats.PassiveRegen * 10) * Time.deltaTime) * Time.timeScale;
                 AmountPassivelyRegenerated = 0;
             }

@@ -9,8 +9,8 @@ Some abbreviations: Energy Cost (EC), Armour Class (AC), Diverted Energy (DE),
 
 -Adjust Regen System:								
 	-Don't let slider bring DE below 90%			Y
-	-Better balancing / softcaps at high regen		N
-	-Prevent UI Flickers (Time between modes)		N
+	-Better balancing / softcaps at high regen		Y
+	-Prevent UI Flickers (Time between modes)		Y
 
 -Readjust card system:
 	-Significantly lower card drawbacks				N
