@@ -57,6 +57,7 @@ namespace DomeShieldTwo
         public float DisruptionFactor;
         public float EnergyPercentForArmour = 0;
         public float BaseEnergyPercentForArmour = 0;
+        public float ActualRegenPercent = 0;
         //public enumShieldClassSelection currentClass;
 
         public AdvShieldStatusTwo(AdvShieldProjector controller, float maxEnergyFactor, float armorClassFactor, float passiveRegenFactor)
@@ -85,25 +86,25 @@ namespace DomeShieldTwo
             CurrentMaxEnergy = SetShieldNumbers(node);
             HealthBeforePowerRouting = CurrentMaxEnergy;
             CalculateEnergyUsedForAC();
+            ActualRegenPercent = ShieldData.RegenPercent;
+            if (EnergyPercentForArmour + ShieldData.RegenPercent > 90) ActualRegenPercent = 90 - EnergyPercentForArmour;
             BaseRegen = CurrentMaxEnergy / 700;
-            MaxHealth = CurrentMaxEnergy * (1f - ((EnergyPercentForArmour + ShieldData.RegenPercent) / 100f));
+            MaxHealth = CurrentMaxEnergy * (1f - ((EnergyPercentForArmour + ActualRegenPercent) / 100f));
             if (MaxHealth == 0 && CurrentMaxEnergy > 0) MaxHealth = 1f;
-            float actualRegenPercent = ShieldData.RegenPercent;
-            if (EnergyPercentForArmour + ShieldData.RegenPercent > 90) actualRegenPercent = 90 - EnergyPercentForArmour;
 
-            CombinedRoutedPowerPercent = EnergyPercentForArmour + actualRegenPercent;
+            CombinedRoutedPowerPercent = EnergyPercentForArmour + ActualRegenPercent;
             /*
             float baseHardenerIncrease = (Hardeners * (1.3f - Math.Min(MaxHealth / 500000, 0.25f)));
             float adjustedHardenerIncrease = baseHardenerIncrease - Mathf.Min((float)Math.Pow(Hardeners * 0.15f, 1.20f), (Hardeners));
             if (Hardeners == 0) adjustedHardenerIncrease = 1f;
             */
             //if (Hardeners == 1) adjustedHardenerIncrease = 1.8f;
-
+            
             float baseTransformerIncrease = (Transformers * ((CurrentMaxEnergy * (.1f+(MaxHealth / CurrentMaxEnergy))) / 8000f));
             //float adjustedTransformerIncrease = baseTransformerIncrease - (float)Math.Pow(Transformers, 1.3f);
             //float adjustedTransformerIncrease = baseTransformerIncrease - Mathf.Min((float)(Math.Pow(Transformers, 1.02f) * 1.6f), (float)Math.Pow(Transformers, 1.3f));
             float adjustedTransformerIncrease = baseTransformerIncrease * Mathf.Pow((Mathf.Max((Transformers / Mathf.Pow(Transformers, 1.1f)), 0.5f)), .95f);
-            adjustedTransformerIncrease /= 2f;
+            adjustedTransformerIncrease /= 2 * Mathf.Pow(Transformers, (1.05f+(Transformers/500)) / Transformers);
             if (Transformers == 0 || adjustedTransformerIncrease < 1f) adjustedTransformerIncrease = 1f;
 
             //if (currentClass == enumShieldClassSelection.HE) { MaxHealth *= 1.5f; HealthBeforePowerRouting *= 1.5f; } "We will want to use these numbers";
@@ -119,7 +120,7 @@ namespace DomeShieldTwo
             float PassiveRegenBeforePercent = (CurrentMaxEnergy / 2000) + (adjustedTransformerIncrease - 1);
             PassiveRegenBeforePercent *= 2;
             if (PassiveRegenBeforePercent > (MaxHealth / 20)) PassiveRegenBeforePercent = MaxHealth / 20;
-            PassiveRegen = PassiveRegenBeforePercent * (1+(Mathf.Pow(ShieldData.RegenPercent, 1.2f)/(6f - (ShieldData.RegenPercent / 40))));
+            PassiveRegen = PassiveRegenBeforePercent * (1+(Mathf.Pow(ActualRegenPercent, 1.2f)/(6f - (ActualRegenPercent / 40))));
             //WHAT WE CURRENTLY HAVE IS PRETTY GOOD. DON'T MAKE SIGNIFICANT CHANGES WITHOUT KNOWING WHAT YOU ARE DOING AND PRESERVING THIS^
             if (ShieldHandler.TargettedByContLaser) PassiveRegen *= (1f - (ShieldHandler.ContLaserRegenFactor * UnityEngine.Time.timeScale));
             if (ShieldHandler.SufferingFromDisruptor) PassiveRegen *= (1f - DisruptionFactor);
