@@ -35,14 +35,14 @@ namespace DomeShieldTwo.newshieldblocksystem
         public static float IdleEPPMulti = .1f;
 
         /// <summary>
-        /// Number of miliseconds between swapping back into Idle mode.
+        /// Number of seconds between swapping back into Idle mode.
         /// </summary>
-        public static readonly int SHIELDREGENSWAPDELAY = 250;
+        public static readonly float SHIELDREGENSWAPDELAY = 0.25f;
 
         /// <summary>
-        /// Number of milliseconds the shield needs to be low on power before triggering a low power state.
+        /// Number of seconds the shield needs to be low on power before triggering a low power state.
         /// </summary>
-        public static readonly int POWERNEGATIVEDELAY = 500;
+        public static readonly float POWERNEGATIVEDELAY = .5f;
 
     }
 }
