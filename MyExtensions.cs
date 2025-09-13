@@ -659,7 +659,7 @@ namespace AdvShields
     {
         //private static Type __instance;
 
-        private static void Postfix(ref PooledPlasmaProjectile projectile, ref Vector3 newPosition, ref Vector3 currentPosition, ref Vector3 normalisedDirection, ref float distance, ref Vector3 velocity, ref int debugId, ref Color projectileDebugColor)
+        private static void Prefix(ref PooledPlasmaProjectile projectile, ref Vector3 newPosition, ref Vector3 currentPosition, ref Vector3 normalisedDirection, ref float distance)
         {
             //PooledPlasmaProjectile _pooledPlasmaProjectile = Traverse.Create(__instance).Field("_pooledPlasmaProjectile").GetValue<PooledPlasmaProjectile>();
 

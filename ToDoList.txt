@@ -23,4 +23,5 @@ Some abbreviations: Energy Cost (EC), Armour Class (AC), Diverted Energy (DE),
 	-Increase effect								Y
 
 -Double check Plasma's hit code
-	-Fix high speed shots clipping thru shield		N
+	-Fix high speed shots clipping thru shield		Maybe fixed? Probably needs a full rework
+		-To this effect, we could probably rework fire's hit code just in case
