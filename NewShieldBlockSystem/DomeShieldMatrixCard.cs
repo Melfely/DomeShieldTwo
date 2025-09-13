@@ -79,8 +79,8 @@ namespace DomeShieldTwo.NewShieldBlockSystem
 
         protected override void AppendToolTip(ProTip tip)
         {
-
             base.AppendToolTip(tip);
+            if (base.Node == null) return;
             int num = 400;
             string card = base.Node.ConnectedCard;
             switch (localCardName)
