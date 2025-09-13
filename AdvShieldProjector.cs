@@ -150,7 +150,7 @@ namespace AdvShields
 
         public Transform ControllersTransform;
 
-        public int DomeShieldsOnCraft;
+        public static int DomeShieldsOnCraft;
 
         public float OverchargerPercent;
 
@@ -403,6 +403,7 @@ namespace AdvShields
             {
                 base.MainConstruct.NodeSetsRestricted.DictionaryOfAllSets.Get<DomeShieldNodeSet>().AddSender(this);
                 TypeStorage.AddProjector(this);
+                AdvShieldProjector.DomeShieldsOnCraft ++;
                 MainConstruct.PowerUsageCreationAndFuelRestricted.AddRecurringPowerUser(PowerUse);
                 MainConstruct.HotObjectsRestricted.AddHotObject(module_Hot);
                 MainConstruct.ShieldsChanged();
@@ -413,6 +414,7 @@ namespace AdvShields
             {
                 base.MainConstruct.NodeSetsRestricted.DictionaryOfAllSets.Get<DomeShieldNodeSet>().RemoveSender(this);
                 TypeStorage.RemoveProjector(this);
+                AdvShieldProjector.DomeShieldsOnCraft--;
                 MainConstruct.PowerUsageCreationAndFuelRestricted.RemoveRecurringPowerUser(PowerUse);
                 MainConstruct.HotObjectsRestricted.RemoveHotObject(module_Hot);
                 MainConstruct.ShieldsChanged();
