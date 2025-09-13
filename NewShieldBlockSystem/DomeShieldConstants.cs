@@ -40,7 +40,7 @@ namespace DomeShieldTwo.newshieldblocksystem
         public static readonly int SHIELDREGENSWAPDELAY = 250;
 
         /// <summary>
-        /// Number of milliseconds the shield needs to be lower power before triggering a low power state.
+        /// Number of milliseconds the shield needs to be low on power before triggering a low power state.
         /// </summary>
         public static readonly int POWERNEGATIVEDELAY = 500;
 
