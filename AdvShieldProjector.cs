@@ -150,7 +150,7 @@ namespace AdvShields
 
         public Transform ControllersTransform;
 
-        public static int DomeShieldsOnCraft;
+        private DomeShieldInstanceManager? _shieldsOnMainConstruct;
 
         public float OverchargerPercent;
 
@@ -171,7 +171,7 @@ namespace AdvShields
             get
             {
                  
-                return MainConstruct.NodeSetsRestricted.RingShieldNodes.NodeCount > 0 || DomeShieldsOnCraft > 1 || MainConstruct.iBlockTypeStorage.ShieldProjectorStore.Count > 0;
+                return MainConstruct.NodeSetsRestricted.RingShieldNodes.NodeCount > 0 || _shieldsOnMainConstruct?.ShieldCount > 1 || MainConstruct.iBlockTypeStorage.ShieldProjectorStore.Count > 0;
             }
         }
 
@@ -394,6 +394,13 @@ namespace AdvShields
             ShieldHandler.Shape.UpdateInfo();
             ShieldDome.UpdateSizeInfo(TransformData);
             carriedObject.ObjectItself.transform.localPosition = LocalPosition + new Vector3(TransformData.LocalPosX, TransformData.LocalPosY, TransformData.LocalPosZ);
+
+            _shieldsOnMainConstruct = MainConstruct.GameObject.GetComponent<DomeShieldInstanceManager>();
+
+            if (_shieldsOnMainConstruct == null)
+            {
+                _shieldsOnMainConstruct = MainConstruct.GameObject.AddComponent<DomeShieldInstanceManager>();
+            }
         }
 
         public override void StateChanged(IBlockStateChange change)
@@ -403,23 +410,26 @@ namespace AdvShields
             if (change.IsAvailableToConstruct)
             {
                 base.MainConstruct.NodeSetsRestricted.DictionaryOfAllSets.Get<DomeShieldNodeSet>().AddSender(this);
+               
                 TypeStorage.AddProjector(this);
-                AdvShieldProjector.DomeShieldsOnCraft ++;
                 MainConstruct.PowerUsageCreationAndFuelRestricted.AddRecurringPowerUser(PowerUse);
                 MainConstruct.HotObjectsRestricted.AddHotObject(module_Hot);
                 MainConstruct.ShieldsChanged();
                 MainConstruct.SchedulerRestricted.RegisterForLateUpdate(Update);
+                _shieldsOnMainConstruct?.RegisterShield(this);
             }
 
             if (change.IsLostToConstructOrConstructLost)
             {
+                _shieldsOnMainConstruct?.UnregisterShield(this);
                 base.MainConstruct.NodeSetsRestricted.DictionaryOfAllSets.Get<DomeShieldNodeSet>().RemoveSender(this);
                 TypeStorage.RemoveProjector(this);
-                AdvShieldProjector.DomeShieldsOnCraft--;
                 MainConstruct.PowerUsageCreationAndFuelRestricted.RemoveRecurringPowerUser(PowerUse);
                 MainConstruct.HotObjectsRestricted.RemoveHotObject(module_Hot);
                 MainConstruct.ShieldsChanged();
                 MainConstruct.SchedulerRestricted.UnregisterForLateUpdate(Update);
+                
+
             }
         }
         public override void FinalOptionalInitialisationStage()
