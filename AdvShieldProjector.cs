@@ -170,7 +170,8 @@ namespace AdvShields
         {
             get
             {
-                return MainConstruct.NodeSetsRestricted.RingShieldNodes.NodeCount > 0 || DomeShieldsOnCraft > 1;
+                 
+                return MainConstruct.NodeSetsRestricted.RingShieldNodes.NodeCount > 0 || DomeShieldsOnCraft > 1 || MainConstruct.iBlockTypeStorage.ShieldProjectorStore.Count > 0;
             }
         }
 
