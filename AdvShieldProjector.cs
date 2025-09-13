@@ -729,7 +729,7 @@ namespace AdvShields
                 request.IdealPower = 0f;
                 //these "PowerDrawDifference"s are how the UI shows you the difference in power draw that passive regeneration costs
             }
-            else if (ShieldHandler.CurrentDamageSustained <= 0)
+            else if (ShieldHandler.CurrentDamageSustained <= 0 && ShieldHandler.TimeAtFullHealth >= DomeShieldConstants.SHIELDREGENSWAPDELAY)
             {
                 /*
                 request.IdealPower = ((float)((TransformData.Length * TransformData.Width * TransformData.Height * 0.006f) + 200f) * (float)Math.Round(SettingsData.ExcessDrive / 2.25f + 0.5555f, 1) / ShieldCircleness) * (1f - ((1f - ShieldStats.ActiveRectifierSavingsPercent * 0.5f)));

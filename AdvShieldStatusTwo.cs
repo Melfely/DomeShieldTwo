@@ -58,6 +58,7 @@ namespace DomeShieldTwo
         public float EnergyPercentForArmour = 0;
         public float BaseEnergyPercentForArmour = 0;
         public float ActualRegenPercent = 0;
+        private float TimeSincePowerLow = 0;
         //public enumShieldClassSelection currentClass;
 
         public AdvShieldStatusTwo(AdvShieldProjector controller, float maxEnergyFactor, float armorClassFactor, float passiveRegenFactor)
@@ -177,17 +178,22 @@ namespace DomeShieldTwo
         {
             float EPP = controller.PowerUse.FractionOfPowerRequestedThatWasProvided;
             float EPPModeMulti = 0.0f;
-            if (EPP < 1)
-            { 
+            float TimeThisTick = UnityEngine.Time.deltaTime;
+            
+            //We need to add a short delay between adding and stat negatives, for just game reasons.
+            if (EPP < 1.0f && TimeSincePowerLow >= DomeShieldConstants.POWERNEGATIVEDELAY)
+            {
                 NotEnoughEnergy = true;
 
-                if (ShieldHandler.CurrentDamageSustained <= 0)
+                if (ShieldHandler.CurrentDamageSustained <= 0.0f && ShieldHandler.TimeAtFullHealth >= DomeShieldConstants.SHIELDREGENSWAPDELAY)
                 {
                     EPPModeMulti = 1.0f; //Base cost of keeping the shield *stable*
-                } else if (ShieldHandler.isActiveRegen)
+                }
+                else if (ShieldHandler.isActiveRegen)
                 {
                     EPPModeMulti = DomeShieldConstants.ActiveRegenEPPMulti / DomeShieldConstants.IdleEPPMulti;
-                } else
+                }
+                else
                 {
                     EPPModeMulti = DomeShieldConstants.PassiveRegenEPPMulti / DomeShieldConstants.IdleEPPMulti;
                 }
@@ -198,7 +204,13 @@ namespace DomeShieldTwo
 
                 PassiveRegen *= EPP;
             }
-            else NotEnoughEnergy = false;
+            else if (EPP < 1.0f && TimeSincePowerLow < DomeShieldConstants.POWERNEGATIVEDELAY) { TimeSincePowerLow += TimeThisTick; } //Count up this counter if we have low EPP
+            else 
+            { 
+                NotEnoughEnergy = false;
+                TimeSincePowerLow = 0.0f; //Clear the time with low power, if we don't have low power. 
+            }
+            
         }
 
         public void AdjustArmourNow(float oxidizer)
