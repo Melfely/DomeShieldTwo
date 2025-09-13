@@ -13,8 +13,8 @@ Some abbreviations: Energy Cost (EC), Armour Class (AC), Diverted Energy (DE),
 	-Prevent UI Flickers (Time between modes)		Y
 
 -Readjust card system:
-	-Significantly lower card drawbacks				N
-	-Slightly lower card buffs						N
+	-Significantly lower card drawbacks				Y
+	-Slightly lower card buffs						Y
 	-Consider combining certain damage types?*		N
 		*This would be to make cards more useful by affecting more than one damage type, increasing the likelyhood a player chooses to use one
 
