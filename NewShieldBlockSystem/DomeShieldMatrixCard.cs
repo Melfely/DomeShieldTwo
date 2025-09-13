@@ -81,44 +81,50 @@ namespace DomeShieldTwo.NewShieldBlockSystem
         {
 
             base.AppendToolTip(tip);
-            /*
             int num = 400;
             string card = base.Node.ConnectedCard;
             switch (localCardName)
             {
                 case "Pierce":
-                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldMatrixCard._locFile.Format("Tip_CardName:", "Energy Consolidator" )));
-                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldMatrixCard._locFile.Format("Tip_CardDescription", "Upon an impact, rushes all of the surrounding energy of the dome to that exact spot, greatly reducing the effectiveness of piercing weapons (and fragments). However, the shield becomes significantly weaker to explosive weapons, as the much wider area of effect overloads the computer's consolidation programming.")));
+                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldMatrixCard._locFile.Format("Tip_CardEffect1", "Incoming Pierce damage * 0.25" )));
+                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldMatrixCard._locFile.Format("Tip_CardEffect2", "Incoming Explosive damage * 1.3")));
                     break;
                 case "Thump":
-                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldMatrixCard._locFile.Format("Tip_CardName:", "Energy Net")));
-                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldMatrixCard._locFile.Format("Tip_CardDescription", "Changes the dome to have a consistency almost like a net, making hollow point ammunition almost worthless against it. Piercing weapons and Plasma have a much easier time slicing through the weaker structure, however.")));
+                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldMatrixCard._locFile.Format("Tip_CardEffect1", "Incoming Thump damage * 0.25")));
+                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldMatrixCard._locFile.Format("Tip_CardEffect2", "Incoming Pierce damage * 1.2")));
+                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldMatrixCard._locFile.Format("Tip_CardEffect3", "Incoming Plasma damage * 1.2")));
                     break;
                 case "Explosive":
-                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldMatrixCard._locFile.Format("Tip_CardName:", "Energy Manipulator")));
-                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldMatrixCard._locFile.Format("Tip_CardDescription", "Allows the dome to intentionally cave from explosions before quickly returning its shape, causing much less energy loss than normal. However, the heat from incendiary weapons also triggers this reaction, causing significantly more damage.")));
+                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldMatrixCard._locFile.Format("Tip_CardEffect1", "Incoming Explosive damage * 0.25")));
+                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldMatrixCard._locFile.Format("Tip_CardEffect2", "Incoming Fire damage * 1.3")));
+                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldMatrixCard._locFile.Format("Tip_CardEffect3", "Incoming Laser damage * 1.15")));
                     break;
                 case "Energy":
-                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldMatrixCard._locFile.Format("Tip_CardName:", "Energy Redirector")));
-                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldMatrixCard._locFile.Format("Tip_CardDescription", "Adjusts the reaction the dome's energy has to energy weapons, making it significantly more resilient to lasers as well as plasma than it already is. Unfortunately, this comes at the cost of the shield's ability to handle kinetic options.")));
+                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldMatrixCard._locFile.Format("Tip_CardEffect1", "Incoming Laser damage * 0.5")));
+                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldMatrixCard._locFile.Format("Tip_CardEffect2", "Incoming Plasma damage * 0.5")));
+                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldMatrixCard._locFile.Format("Tip_CardEffect3", "Incoming Pierce damage * 1.25")));
+                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldMatrixCard._locFile.Format("Tip_CardEffect4", "Incoming Thump damage * 1.25")));
                     break;
                 case "Fire":
-                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldMatrixCard._locFile.Format("Tip_CardName:", "Energy Seperator")));
-                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldMatrixCard._locFile.Format("Tip_CardDescription", "Completely reworks the way the shield controls energy, almost seperating it from the controller block. As a result, incendiary weapaons become unable to overheat and therefore damage the shield. However, electronic attacks will obliterate the shield, since there's no surge protections.")));
+                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldMatrixCard._locFile.Format("Tip_CardEffect1", "Incoming Fire damage * 0.25")));
+                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldMatrixCard._locFile.Format("Tip_CardEffect2", "Incoming EMP damage * 1.3")));
                     break;
                 case "EMP":
-                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldMatrixCard._locFile.Format("Tip_CardName:", "Energy Rescinder")));
-                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldMatrixCard._locFile.Format("Tip_CardDescription", "Grants the dome the ability to rescind energy from a spot instantaneously, rending all electric weapons (including disruptors) nearly useless against the shield as there becomes no electricity to overload. Kinetic weapons love this fact, however, and will decimate the shield. Interestingly, normal energy weapons seem unaffected.")));
+                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldMatrixCard._locFile.Format("Tip_CardEffect1", "Incoming EMP damage * 0.2")));
+                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldMatrixCard._locFile.Format("Tip_CardEffect2", "Disruption effect * 0.5")));
+                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldMatrixCard._locFile.Format("Tip_CardEffect2", "Incoming Pierce damage * 1.35")));
+                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldMatrixCard._locFile.Format("Tip_CardEffect2", "Incoming Thump damage * 1.35")));
                     break;
                 case "Particle":
-                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldMatrixCard._locFile.Format("Tip_CardName:", "Energy Disruptor")));
-                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldMatrixCard._locFile.Format("Tip_CardDescription", "Specifically tunes the energy around the dome to intercept particle cannon shots, allowing the shield to block them with zero overkill potential. Laser weaponry becomes enhanced against a shield like this, however, and EMP will be even more effective than usual.")));
+                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldMatrixCard._locFile.Format("Tip_CardEffect1", "The shield can now be hit by particle cannons, protecting the craft from them (damage like normal)")));
+                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldMatrixCard._locFile.Format("Tip_CardEffect2", "Incoming Laser damage * 1.1")));
+                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldMatrixCard._locFile.Format("Tip_CardEffect2", "Incoming EMP damage * 1.1")));
+                    tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldMatrixCard._locFile.Format("Tip_CardEffect2", "Incoming Plasma damage * 1.1")));
                     break;
                 case "None":
                     tip.Add(Position.Middle, new ProTipSegment_Text(num, DomeShieldMatrixCard._locFile.Format("Tip_BrokenCard:", "ERROR: NO CARD TYPE FOUND. Report this to the developer of the mod!!!")));
                     break;
             }
-            */
             //Have fun rewriting this one.
             //I did, thank you very much.
         }

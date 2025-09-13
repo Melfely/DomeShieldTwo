@@ -555,9 +555,9 @@ namespace AdvShields
             switch (damType)
             {
                 case "Pierce":
-                    return 0.2f;
+                    return 0.25f;
                 case "Explosive":
-                    return 4f;
+                    return 1.3f;
                 default:
                     return 1f;
                     //Default means it wasn't any other case.
@@ -570,11 +570,11 @@ namespace AdvShields
             switch (damType)
             {
                 case "Pierce":
-                    return 3f;
+                    return 1.2f;
                 case "Thump":
-                    return 0.2f;
+                    return 0.25f;
                 case "Plasma":
-                    return 3f;
+                    return 1.2f;
                 default:
                     return 1f;
                     //Default means it wasn't any other case.
@@ -586,11 +586,11 @@ namespace AdvShields
             switch (damType)
             {
                 case "Explosive":
-                    return 0.2f;
+                    return 0.25f;
                 case "Fire":
-                    return 4f;
+                    return 1.3f;
                 case "Laser":
-                    return 2;
+                    return 1.15f;
                 default:
                     return 1f;
                     //Default means it wasn't any other case.
@@ -601,13 +601,13 @@ namespace AdvShields
             switch (damType)
             {
                 case "Laser":
-                    return 0.25f;
+                    return 0.5f;
                 case "Plasma":
-                    return 0.25f;
+                    return 0.5f;
                 case "Pierce":
-                    return 3f;
+                    return 1.25f;
                 case "Thump":
-                    return 3f;
+                    return 1.25f;
                 default:
                     return 1f;
                     //Default means it wasn't any other case.
@@ -618,9 +618,9 @@ namespace AdvShields
             switch (damType)
             {
                 case "Fire":
-                    return 0.1f;
+                    return 0.25f;
                 case "EMP":
-                    return 8f;
+                    return 1.3f;
                 default:
                     return 1f;
                     //Default means it wasn't any other case.
@@ -631,11 +631,11 @@ namespace AdvShields
             switch (damType)
             {
                 case "EMP":
-                    return 0.05f;
+                    return 0.2f;
                 case "Pierce":
-                    return 4f;
+                    return 1.35f;
                 case "Thump":
-                    return 4f;
+                    return 1.35f;
                 default:
                     return 1f;
                     //Default means it wasn't any other case.
@@ -649,9 +649,11 @@ namespace AdvShields
                     AdvLogger.LogInfo("You shouldn't be running GetCardMult for particle damage...");
                     return 1;
                 case "Laser":
-                    return 2f;
+                    return 1.1f;
                 case "EMP":
-                    return 2f;
+                    return 1.1f;
+                case "Plamsa":
+                    return 1.1f;
                 default:
                     return 1f;
                     //Default means it wasn't any other case.
