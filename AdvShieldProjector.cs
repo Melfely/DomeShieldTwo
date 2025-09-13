@@ -513,10 +513,14 @@ namespace AdvShields
             this.AppendCavityStatsWithFirepower(tip, num);
             tip.Add(new ProTipSegment_TextAdjustable(500, text_0), BrilliantSkies.Ui.Tips.Position.Middle);
             //tip.Add(new ProTipSegment_Text(400, $"SHIELD CLASS: {SettingsData.ShieldClass}"), BrilliantSkies.Ui.Tips.Position.Middle);
-            tip.Add(new ProTipSegment_Text(400, $"Surface area {(int)ShieldHandler.Shape.SurfaceArea()} m2"), BrilliantSkies.Ui.Tips.Position.Middle);
-            tip.Add(new ProTipSegment_Text(400, $"This shield dome has {(int)currentHealth}/{(int)ShieldStats.MaxHealth} health"), BrilliantSkies.Ui.Tips.Position.Middle);
-            tip.Add(new ProTipSegment_Text(400, $"This shield dome has {ShieldStats.ArmourClass} armor class (minimum 10)."), BrilliantSkies.Ui.Tips.Position.Middle);
-            tip.Add(new ProTipSegment_Text(400, $"This shield dome has a passive regen of {ShieldStats.PassiveRegen} each second. " /* (Minimum 50, maximum 500000).*/ + $"Active regeneration takes {ShieldStats.ActualWaitTime} to begin."), BrilliantSkies.Ui.Tips.Position.Middle);
+            tip.Add(BrilliantSkies.Ui.Tips.Position.Middle, new ProTipSegment_Text(400, AdvShieldProjector._locFile.Format("Tip_PowerDraw", $"Current Power Draw: <<{PowerUse.PowerUsed}>>")));
+            tip.Add(BrilliantSkies.Ui.Tips.Position.Middle, new ProTipSegment_Text(400, AdvShieldProjector._locFile.Format("Tip_SurfaceArea", "Surface area: <<{0}>> m2", new object[] { (int)ShieldHandler.Shape.SurfaceArea() })));
+            tip.Add(BrilliantSkies.Ui.Tips.Position.Middle, new ProTipSegment_Text(400, AdvShieldProjector._locFile.Format("Tip_Health", $"Shield Health: <<{(int)currentHealth}>> / {(int)ShieldStats.MaxHealth}")));
+            tip.Add(BrilliantSkies.Ui.Tips.Position.Middle, new ProTipSegment_Text(400, AdvShieldProjector._locFile.Format("Tip_ArmorClass", $"Armor Class: <<{ShieldStats.ArmourClass}>> AC")));
+
+            tip.Add(BrilliantSkies.Ui.Tips.Position.Middle, new ProTipSegment_Text(400, AdvShieldProjector._locFile.Format("Tip_PRegenRate", $"Passive Regen Rate: <<{ShieldStats.PassiveRegen}>> / S")));
+            tip.Add(BrilliantSkies.Ui.Tips.Position.Middle, new ProTipSegment_Text(400, AdvShieldProjector._locFile.Format("Tip_ActiveRegenDelay", $"Active Regen Delay: <<{ShieldStats.ActualWaitTime}>> Seconds")));
+
             tip.Add(new ProTipSegment_Text(400, $"This shield dome has {ShieldStats.Hardeners} Hardeners and {ShieldStats.Transformers} Transformers attatched. See the stats page for more info."), BrilliantSkies.Ui.Tips.Position.Middle);
             if (Node.ConnectedCard.ToLower() != "none") tip.Add(new ProTipSegment_Text(400, $"This shield has a matrix computer with a {Node.ConnectedCard} card attached."), BrilliantSkies.Ui.Tips.Position.Middle);
             if (ShieldHandler.TargettedByContLaser) tip.Add(new ProTipSegment_Text(400, "<color=yellow>Shield is currently being attacked by a continuous laser. Regen capabilities are negatively affected.</color>"), BrilliantSkies.Ui.Tips.Position.Middle);
