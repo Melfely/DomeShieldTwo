@@ -58,6 +58,7 @@ namespace DomeShieldTwo
         public float EnergyPercentForArmour = 0;
         public float BaseEnergyPercentForArmour = 0;
         public float ActualRegenPercent = 0;
+        private float TimeSincePowerLow = 0;
         //public enumShieldClassSelection currentClass;
 
         public AdvShieldStatusTwo(AdvShieldProjector controller, float maxEnergyFactor, float armorClassFactor, float passiveRegenFactor)
@@ -143,7 +144,33 @@ namespace DomeShieldTwo
         {
             BaseEnergyPercentForArmour = (Mathf.Clamp01((ShieldData.ArmourSet - 10f) / (60f - 10f)) * 0.8f) * 100;
             if (BaseEnergyPercentForArmour == 0) { EnergyPercentForArmour = 0; return; }
-            float hardenerMod = (Hardeners / Mathf.Pow(Hardeners, 1.05f)) * Mathf.Clamp(300000 / CurrentMaxEnergy, 0, 1);
+
+            #region Hardener Efficiceny Formula
+            //Calculates the hardender efficiency based on the current Max Energy.
+            const float R = 1000000; //The Energy value where the formula will output (0.5 + POSTMOD)
+            const float S = 300000; //How aggressive the EARLY parts of the shield are, higher value means a SLOWER HIGH ENERGY falloff, but a FASTER LOW ENERGY falloff. 
+
+            const float POSTMMOD = 0.1f;//The post formula just plain outright buff, this is to give a range of shield values above 1.
+            const float MINEFFICIENCY = 0.1f;//The min effectiveness of the hardneners on big shields
+            const float MAXEFFICIENCY = 1f; //The max effectivness of hardeners on small shields
+
+            float hardenerEfficiency = Mathf.Clamp((1f / (1f + Mathf.Pow((MathF.E), (CurrentMaxEnergy - R) /S))) + POSTMMOD, MINEFFICIENCY, MAXEFFICIENCY);
+
+            #endregion
+
+            #region Hardener EPP Reduction Formula
+            //Calculates the reduction in EPP cost for the set AC value based on number of hardeners
+            const float K = 1f; //The steepness of the slope of below formula. Higher number makes a MUCH faster drop before curving
+            const float C = 0.3f; //The Flatness of the curve, smaller number makes curve flatter
+            const float MAXREDUCTION = 0; //The smallest value that the hardnerModifier can be, 0 means the shield with enough hardners CAN make AC free.
+
+            float efficiency_Term = (1f + hardenerEfficiency) / 2f; //Tje part that takes into account efficiency
+            float log_Term = -C * Mathf.Log(1f + K * Hardeners); //The part that takes into account hardeners
+
+            float hardenerMod = Mathf.Max(efficiency_Term * log_Term + 1f, MAXREDUCTION);
+
+            #endregion
+
             EnergyPercentForArmour = BaseEnergyPercentForArmour * hardenerMod;
         }
 
@@ -151,17 +178,22 @@ namespace DomeShieldTwo
         {
             float EPP = controller.PowerUse.FractionOfPowerRequestedThatWasProvided;
             float EPPModeMulti = 0.0f;
-            if (EPP < 1)
-            { 
+            float TimeThisTick = UnityEngine.Time.deltaTime;
+            
+            //We need to add a short delay between adding and stat negatives, for just game reasons.
+            if (EPP < 1.0f && TimeSincePowerLow >= DomeShieldConstants.POWERNEGATIVEDELAY)
+            {
                 NotEnoughEnergy = true;
 
-                if (ShieldHandler.CurrentDamageSustained <= 0)
+                if (ShieldHandler.CurrentDamageSustained <= 0.0f && ShieldHandler.TimeAtFullHealth >= DomeShieldConstants.SHIELDREGENSWAPDELAY)
                 {
                     EPPModeMulti = 1.0f; //Base cost of keeping the shield *stable*
-                } else if (ShieldHandler.isActiveRegen)
+                }
+                else if (ShieldHandler.isActiveRegen)
                 {
                     EPPModeMulti = DomeShieldConstants.ActiveRegenEPPMulti / DomeShieldConstants.IdleEPPMulti;
-                } else
+                }
+                else
                 {
                     EPPModeMulti = DomeShieldConstants.PassiveRegenEPPMulti / DomeShieldConstants.IdleEPPMulti;
                 }
@@ -172,7 +204,13 @@ namespace DomeShieldTwo
 
                 PassiveRegen *= EPP;
             }
-            else NotEnoughEnergy = false;
+            else if (EPP < 1.0f && TimeSincePowerLow < DomeShieldConstants.POWERNEGATIVEDELAY) { TimeSincePowerLow += TimeThisTick; } //Count up this counter if we have low EPP
+            else 
+            { 
+                NotEnoughEnergy = false;
+                TimeSincePowerLow = 0.0f; //Clear the time with low power, if we don't have low power. 
+            }
+            
         }
 
         public void AdjustArmourNow(float oxidizer)

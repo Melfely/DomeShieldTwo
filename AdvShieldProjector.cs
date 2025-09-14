@@ -150,7 +150,7 @@ namespace AdvShields
 
         public Transform ControllersTransform;
 
-        public int DomeShieldsOnCraft;
+        private DomeShieldInstanceManager? _shieldsOnMainConstruct;
 
         public float OverchargerPercent;
 
@@ -170,7 +170,8 @@ namespace AdvShields
         {
             get
             {
-                return MainConstruct.NodeSetsRestricted.RingShieldNodes.NodeCount > 0 || DomeShieldsOnCraft > 1;
+                 
+                return MainConstruct.NodeSetsRestricted.RingShieldNodes.NodeCount > 0 || _shieldsOnMainConstruct?.ShieldCount > 1 || MainConstruct.iBlockTypeStorage.ShieldProjectorStore.Count > 0;
             }
         }
 
@@ -393,6 +394,13 @@ namespace AdvShields
             ShieldHandler.Shape.UpdateInfo();
             ShieldDome.UpdateSizeInfo(TransformData);
             carriedObject.ObjectItself.transform.localPosition = LocalPosition + new Vector3(TransformData.LocalPosX, TransformData.LocalPosY, TransformData.LocalPosZ);
+
+            _shieldsOnMainConstruct = MainConstruct.GameObject.GetComponent<DomeShieldInstanceManager>();
+
+            if (_shieldsOnMainConstruct == null)
+            {
+                _shieldsOnMainConstruct = MainConstruct.GameObject.AddComponent<DomeShieldInstanceManager>();
+            }
         }
 
         public override void StateChanged(IBlockStateChange change)
@@ -402,21 +410,26 @@ namespace AdvShields
             if (change.IsAvailableToConstruct)
             {
                 base.MainConstruct.NodeSetsRestricted.DictionaryOfAllSets.Get<DomeShieldNodeSet>().AddSender(this);
+               
                 TypeStorage.AddProjector(this);
                 MainConstruct.PowerUsageCreationAndFuelRestricted.AddRecurringPowerUser(PowerUse);
                 MainConstruct.HotObjectsRestricted.AddHotObject(module_Hot);
                 MainConstruct.ShieldsChanged();
                 MainConstruct.SchedulerRestricted.RegisterForLateUpdate(Update);
+                _shieldsOnMainConstruct?.RegisterShield(this);
             }
 
             if (change.IsLostToConstructOrConstructLost)
             {
+                _shieldsOnMainConstruct?.UnregisterShield(this);
                 base.MainConstruct.NodeSetsRestricted.DictionaryOfAllSets.Get<DomeShieldNodeSet>().RemoveSender(this);
                 TypeStorage.RemoveProjector(this);
                 MainConstruct.PowerUsageCreationAndFuelRestricted.RemoveRecurringPowerUser(PowerUse);
                 MainConstruct.HotObjectsRestricted.RemoveHotObject(module_Hot);
                 MainConstruct.ShieldsChanged();
                 MainConstruct.SchedulerRestricted.UnregisterForLateUpdate(Update);
+                
+
             }
         }
         public override void FinalOptionalInitialisationStage()
@@ -510,10 +523,14 @@ namespace AdvShields
             this.AppendCavityStatsWithFirepower(tip, num);
             tip.Add(new ProTipSegment_TextAdjustable(500, text_0), BrilliantSkies.Ui.Tips.Position.Middle);
             //tip.Add(new ProTipSegment_Text(400, $"SHIELD CLASS: {SettingsData.ShieldClass}"), BrilliantSkies.Ui.Tips.Position.Middle);
-            tip.Add(new ProTipSegment_Text(400, $"Surface area {(int)ShieldHandler.Shape.SurfaceArea()} m2"), BrilliantSkies.Ui.Tips.Position.Middle);
-            tip.Add(new ProTipSegment_Text(400, $"This shield dome has {(int)currentHealth}/{(int)ShieldStats.MaxHealth} health"), BrilliantSkies.Ui.Tips.Position.Middle);
-            tip.Add(new ProTipSegment_Text(400, $"This shield dome has {ShieldStats.ArmourClass} armor class (minimum 10)."), BrilliantSkies.Ui.Tips.Position.Middle);
-            tip.Add(new ProTipSegment_Text(400, $"This shield dome has a passive regen of {ShieldStats.PassiveRegen} each second. " /* (Minimum 50, maximum 500000).*/ + $"Active regeneration takes {ShieldStats.ActualWaitTime} to begin."), BrilliantSkies.Ui.Tips.Position.Middle);
+            tip.Add(BrilliantSkies.Ui.Tips.Position.Middle, new ProTipSegment_Text(400, AdvShieldProjector._locFile.Format("Tip_PowerDraw", $"Current Power Draw: <<{PowerUse.PowerUsed}>>")));
+            tip.Add(BrilliantSkies.Ui.Tips.Position.Middle, new ProTipSegment_Text(400, AdvShieldProjector._locFile.Format("Tip_SurfaceArea", "Surface area: <<{0}>> m2", new object[] { (int)ShieldHandler.Shape.SurfaceArea() })));
+            tip.Add(BrilliantSkies.Ui.Tips.Position.Middle, new ProTipSegment_Text(400, AdvShieldProjector._locFile.Format("Tip_Health", $"Shield Health: <<{(int)currentHealth}>> / {(int)ShieldStats.MaxHealth}")));
+            tip.Add(BrilliantSkies.Ui.Tips.Position.Middle, new ProTipSegment_Text(400, AdvShieldProjector._locFile.Format("Tip_ArmorClass", $"Armor Class: <<{ShieldStats.ArmourClass}>> AC")));
+
+            tip.Add(BrilliantSkies.Ui.Tips.Position.Middle, new ProTipSegment_Text(400, AdvShieldProjector._locFile.Format("Tip_PRegenRate", $"Passive Regen Rate: <<{ShieldStats.PassiveRegen}>> / S")));
+            tip.Add(BrilliantSkies.Ui.Tips.Position.Middle, new ProTipSegment_Text(400, AdvShieldProjector._locFile.Format("Tip_ActiveRegenDelay", $"Active Regen Delay: <<{ShieldStats.ActualWaitTime}>> Seconds")));
+
             tip.Add(new ProTipSegment_Text(400, $"This shield dome has {ShieldStats.Hardeners} Hardeners and {ShieldStats.Transformers} Transformers attatched. See the stats page for more info."), BrilliantSkies.Ui.Tips.Position.Middle);
             if (Node.ConnectedCard.ToLower() != "none") tip.Add(new ProTipSegment_Text(400, $"This shield has a matrix computer with a {Node.ConnectedCard} card attached."), BrilliantSkies.Ui.Tips.Position.Middle);
             if (ShieldHandler.TargettedByContLaser) tip.Add(new ProTipSegment_Text(400, "<color=yellow>Shield is currently being attacked by a continuous laser. Regen capabilities are negatively affected.</color>"), BrilliantSkies.Ui.Tips.Position.Middle);
@@ -712,7 +729,7 @@ namespace AdvShields
                 request.IdealPower = 0f;
                 //these "PowerDrawDifference"s are how the UI shows you the difference in power draw that passive regeneration costs
             }
-            else if (ShieldHandler.CurrentDamageSustained <= 0)
+            else if (ShieldHandler.CurrentDamageSustained <= 0 && ShieldHandler.TimeAtFullHealth >= DomeShieldConstants.SHIELDREGENSWAPDELAY)
             {
                 /*
                 request.IdealPower = ((float)((TransformData.Length * TransformData.Width * TransformData.Height * 0.006f) + 200f) * (float)Math.Round(SettingsData.ExcessDrive / 2.25f + 0.5555f, 1) / ShieldCircleness) * (1f - ((1f - ShieldStats.ActiveRectifierSavingsPercent * 0.5f)));

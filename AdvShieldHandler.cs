@@ -741,23 +741,25 @@ namespace AdvShields
         public void Update(AdvShieldStatusTwo ShieldStats)
         {
             HandleUpdateModifiers();
-            float timeThisTick = Time.deltaTime * Time.timeScale;
+            float timeThisTick = Time.deltaTime;
             TimeSinceModeSwap += timeThisTick;
             if (!isActiveRegen)
             {
                 TimeSinceLastHit += timeThisTick;
                 if (TimeSinceLastHit > ShieldStats.ActualWaitTime) isActiveRegen = true;
             }
-            if (CurrentDamageSustained == 0.0f)
+            if ((CurrentDamageSustained <= 0.0f) && (controller.SettingsData.IsShieldOn.Us == enumShieldDomeState.On) && TimeAtFullHealth < DomeShieldConstants.SHIELDREGENSWAPDELAY)
             {
+                PassiveRegenText = "The shield is at full health, will move to idle mode soon";
+                CurrentDamageSustained = 0.0f;
                 TimeAtFullHealth += timeThisTick;
                 return;
             }
-            if ((CurrentDamageSustained <= 0.0f) && (controller.SettingsData.IsShieldOn.Us == enumShieldDomeState.On))
+            if ((CurrentDamageSustained <= 0.0f) && (controller.SettingsData.IsShieldOn.Us == enumShieldDomeState.On) && TimeAtFullHealth >= DomeShieldConstants.SHIELDREGENSWAPDELAY)
             {
                 PassiveRegenText = "The shield is at full health, it is not regenerating.";
                 CurrentDamageSustained = 0.0f;
-                TimeAtFullHealth = 0;
+                TimeAtFullHealth += timeThisTick;
                 return;
             }
 
@@ -765,8 +767,8 @@ namespace AdvShields
             {
                 if (ShieldDisabled) return;
                 if (TimeSinceModeSwap <= 0.5f) return;
-                CurrentDamageSustained -= (ShieldStats.PassiveRegen * Time.deltaTime) * Time.timeScale;
-                //AmountPassivelyRegenerated += (ShieldStats.PassiveRegen * Time.deltaTime) * Time.timeScale;
+                CurrentDamageSustained -= (ShieldStats.PassiveRegen * Time.deltaTime);
+                //AmountPassivelyRegenerated += (ShieldStats.PassiveRegen * Time.deltaTime);
                 //We are dividing by 70 to account for how often this method runs.
                 PassiveRegenText = "Shield is using increased engine power to passively regenerate the shield";
                 TimeAtFullHealth = 0;
@@ -786,7 +788,7 @@ namespace AdvShields
             else if (CurrentDamageSustained > 0.0f)
             {
                 if (TimeSinceModeSwap <= 0.5f) return;
-                CurrentDamageSustained -= ((ShieldStats.PassiveRegen * 10) * Time.deltaTime) * Time.timeScale;
+                CurrentDamageSustained -= ((ShieldStats.PassiveRegen * 10) * Time.deltaTime);
                 AmountPassivelyRegenerated = 0;
             }
             /*if ((CurrentDamageSustained / ShieldStats.MaxEnergy <= 0.999f) && (controller.ShieldData.Type.Us == enumShieldDomeState.On))
