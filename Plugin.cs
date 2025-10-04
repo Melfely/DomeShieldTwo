@@ -25,7 +25,6 @@ namespace DomeShieldTwo
             loaderObj.AddComponent<AssetLoader>();
             //StaticStorage.LoadAsset();
             AdvLogger.LogWarning("Assets loaded!", LogOptions._AlertDevInGame);
-            
 
             AdvLogger.LogWarning("Attempting to setup harmony", LogOptions._AlertDevInGame);
             Harmony harmony = new Harmony("AdvShields_Patch");

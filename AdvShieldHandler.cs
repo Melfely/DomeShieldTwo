@@ -204,7 +204,7 @@ namespace AdvShields
             float maxEnergy = stats.MaxHealth;
             if (CurrentDamageSustained >= maxEnergy)
             {
-                CurrentDamageSustained = maxEnergy;
+                //CurrentDamageSustained = maxEnergy;
                 controller.SettingsData.IsShieldOn.Us = enumShieldDomeState.Off;
                 controller.ShieldDome.gameObject.GetComponent<MeshRenderer>().enabled = false;
             }
@@ -238,7 +238,7 @@ namespace AdvShields
             float maxEnergy = stats.MaxHealth;
             if (CurrentDamageSustained >= maxEnergy)
             {
-                CurrentDamageSustained = maxEnergy;
+                //CurrentDamageSustained = maxEnergy;
                 controller.SettingsData.IsShieldOn.Us = enumShieldDomeState.Off;
                 controller.ShieldDome.gameObject.GetComponent<MeshRenderer>().enabled = false;
             }
@@ -262,7 +262,7 @@ namespace AdvShields
             float maxEnergy = stats.MaxHealth;
             if (CurrentDamageSustained >= maxEnergy)
             {
-                CurrentDamageSustained = maxEnergy;
+                //CurrentDamageSustained = maxEnergy;
                 controller.SettingsData.IsShieldOn.Us = enumShieldDomeState.Off;
                 controller.ShieldDome.gameObject.GetComponent<MeshRenderer>().enabled = false;
             }
@@ -281,7 +281,7 @@ namespace AdvShields
             float maxEnergy = stats.MaxHealth;
             if (CurrentDamageSustained >= maxEnergy)
             {
-                CurrentDamageSustained = maxEnergy;
+                //CurrentDamageSustained = maxEnergy;
                 controller.SettingsData.IsShieldOn.Us = enumShieldDomeState.Off;
                 controller.ShieldDome.gameObject.GetComponent<MeshRenderer>().enabled = false;
             }
@@ -303,7 +303,7 @@ namespace AdvShields
             float maxEnergy = stats.MaxHealth;
             if (CurrentDamageSustained >= maxEnergy)
             {
-                CurrentDamageSustained = maxEnergy;
+                //CurrentDamageSustained = maxEnergy;
                 controller.SettingsData.IsShieldOn.Us = enumShieldDomeState.Off;
                 controller.ShieldDome.gameObject.GetComponent<MeshRenderer>().enabled = false;
             }
@@ -343,7 +343,7 @@ namespace AdvShields
             float maxEnergy = stats.MaxHealth;
             if (CurrentDamageSustained >= maxEnergy)
             {
-                CurrentDamageSustained = maxEnergy;
+                //CurrentDamageSustained = maxEnergy;
                 controller.SettingsData.IsShieldOn.Us = enumShieldDomeState.Off;
                 controller.ShieldDome.gameObject.GetComponent<MeshRenderer>().enabled = false;
             }
@@ -388,7 +388,7 @@ namespace AdvShields
             float maxEnergy = stats.MaxHealth;
             if (CurrentDamageSustained >= maxEnergy)
             {
-                CurrentDamageSustained = maxEnergy;
+                //CurrentDamageSustained = maxEnergy;
                 controller.SettingsData.IsShieldOn.Us = enumShieldDomeState.Off;
                 controller.ShieldDome.gameObject.GetComponent<MeshRenderer>().enabled = false;
             }
@@ -483,7 +483,7 @@ namespace AdvShields
             float maxEnergy = stats.MaxHealth;
             if (CurrentDamageSustained >= maxEnergy)
             {
-                CurrentDamageSustained = maxEnergy;
+                //CurrentDamageSustained = maxEnergy;
                 controller.SettingsData.IsShieldOn.Us = enumShieldDomeState.Off;
                 fireStorage.Clear();
                 controller.ShieldDome.gameObject.GetComponent<MeshRenderer>().enabled = false;
@@ -809,7 +809,7 @@ namespace AdvShields
                 controller.SettingsData.IsShieldOn.Us = enumShieldDomeState.On;
                 CurrentDamageSustained = 0.0f;
                 ShieldDisabled = false;
-                controller.ShieldDome.gameObject.GetComponent<MeshRenderer>().enabled = true;
+                //controller.ShieldDome.gameObject.GetComponent<MeshRenderer>().enabled = true;
             }
             /*if (CurrentDamageSustained == 0.0f)
             {

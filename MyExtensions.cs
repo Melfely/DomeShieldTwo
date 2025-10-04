@@ -500,7 +500,7 @@ namespace AdvShields
                         //AdvLogger.LogInfo("APS shell just hit the shield?");
                         ShellModel model = Traverse.Create(__instance).Field("_shellModel").GetValue<ShellModel>();
                         item.ShieldHandler.HandleGenericAPSHit(model, hitPosition, __instance.Gunner);
-                        if (model.ExplosiveCharges.GetExplosionRadius() > 0)
+                        if (model.ExplosiveCharges.GetExplosionDamage() > 0)
                         {
                             GameEvents.Callbacks.DispatchToMainThread(delegate
                             {
@@ -518,7 +518,8 @@ namespace AdvShields
                                 ExplosionVisualiser.Instance.MakeExplosion(size, hitPosition, null, false);
                             }, false);
                         }
-                            __instance.Deactivate(false);
+                        if (model.KineticDamage.GetKineticDamage() > item.ShieldStats.MaxHealth) return true;
+                        __instance.Deactivate(false);
                     }
                 }
             }
@@ -555,6 +556,7 @@ namespace AdvShields
                         float power = Traverse.Create(__instance).Field("_fragPower").GetValue<float>();
                         AdvLogger.LogInfo("power is " + power);
                         */
+                        float backup = __instance._pState.FragDamage;
                         float whyIsItLikeThis = (__instance._pState.FragDamage * __instance._pState.FragCount) * 3000f;
                         float seriouslyWhy = (whyIsItLikeThis / (float)__instance._pState.FragCount);
                         float iHaveManyQuestions = Rounding.R0(seriouslyWhy * FragGenerator.GetAngleDamageMultiplier(__instance._pState.FragAngle));
@@ -570,6 +572,7 @@ namespace AdvShields
                                 ExplosionVisualiser.Instance.MakeExplosion(size, hitPosition, null, false);
                             }, false);
                         }
+                        if (__instance._pState.KineticDamage > item.ShieldStats.MaxHealth) { __instance._pState.FragDamage = backup; return true; }
                         __instance.Deactivate(false);
                     }
                 }
@@ -682,7 +685,9 @@ namespace AdvShields
                     {
                         //AdvLogger.LogInfo("Code worked", LogOptions._AlertDevInGame);
                         //The code does, in fact, work.
+                        float plasDamage = projectile.GetCurrentDamage();
                         item.ShieldHandler.ApplyPlasmaDamage(new PlasmaDamageDescription(projectile.Gunner, projectile.GetCurrentDamage(), projectile.ArmorPiercing, currentPosition), hitPosition);
+                        if (plasDamage > item.ShieldStats.MaxHealth) return;
                         projectile.Deactivate(false);
                         //projectile.DestroyYourself();
                     }
@@ -827,12 +832,15 @@ namespace AdvShields
                 if (hasHE)
                 {
                     item.ShieldHandler.ApplyHEDamage(_missile.Blueprint.Warheads.ExplosiveDamage, position);
+                    float size = (6f * _missile.Blueprint.Warheads.ExplosiveDamage / 10000);
+                    ExplosionVisualiser.Instance.MakeExplosion(size, hitPointIn, null, false);
                 }
 
                 bool safetyOn = !__instance.CheckSafety(item) || !_missile.HasClearedVehicle;
-                float size = (6f * _missile.Blueprint.Warheads.ExplosiveDamage / 10000);
+                //float size = (6f * _missile.Blueprint.Warheads.ExplosiveDamage / 10000);
                 //AdvLogger.LogInfo(size.ToString(), LogOptions._AlertDevInGame);
-                ExplosionVisualiser.Instance.MakeExplosion(size, hitPointIn, null, false);
+                //ExplosionVisualiser.Instance.MakeExplosion(size, hitPointIn, null, false);
+                if (damage > item.ShieldStats.MaxHealth) return;
                 _missile.MoveNoseIntoPosition(hitPointIn);
                 _missile.DestroyYourself();
                 //_missile.ExplosionHandler.ExplodeNow(allConstructBlock, hitPointInLocal, hitPointIn, safetyOn);
