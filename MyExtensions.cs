@@ -500,6 +500,7 @@ namespace AdvShields
                         //AdvLogger.LogInfo("APS shell just hit the shield?");
                         ShellModel model = Traverse.Create(__instance).Field("_shellModel").GetValue<ShellModel>();
                         item.ShieldHandler.HandleGenericAPSHit(model, hitPosition, __instance.Gunner);
+                        if (model.KineticDamage.GetKineticDamage() > item.ShieldStats.MaxHealth) return true;
                         if (model.ExplosiveCharges.GetExplosionDamage() > 0)
                         {
                             GameEvents.Callbacks.DispatchToMainThread(delegate
@@ -518,7 +519,6 @@ namespace AdvShields
                                 ExplosionVisualiser.Instance.MakeExplosion(size, hitPosition, null, false);
                             }, false);
                         }
-                        if (model.KineticDamage.GetKineticDamage() > item.ShieldStats.MaxHealth) return true;
                         __instance.Deactivate(false);
                     }
                 }
@@ -563,6 +563,7 @@ namespace AdvShields
                         __instance._pState.FragDamage = iHaveManyQuestions;
                         //I'm not kidding this is actually how FTD gets its frag damage.
                         item.ShieldHandler.HandleGenericCRAMAndSimpleHit(__instance._pState, hitPosition);
+                        if (__instance._pState.KineticDamage > item.ShieldStats.MaxHealth) { __instance._pState.FragDamage = backup; return true; }
                         if (__instance._pState.ExplosiveDamage > 0)
                         {
                             GameEvents.Callbacks.DispatchToMainThread(delegate
@@ -572,7 +573,6 @@ namespace AdvShields
                                 ExplosionVisualiser.Instance.MakeExplosion(size, hitPosition, null, false);
                             }, false);
                         }
-                        if (__instance._pState.KineticDamage > item.ShieldStats.MaxHealth) { __instance._pState.FragDamage = backup; return true; }
                         __instance.Deactivate(false);
                     }
                 }
