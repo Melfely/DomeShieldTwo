@@ -98,6 +98,8 @@ namespace AdvShields
         public bool isActiveRegen = true;
 
         public float TimeSinceModeSwap = 1;
+
+        public float OverkillDamage = 0;
         public float GetCurrentHealth()
         {
             return controller.ShieldStats.MaxHealth - CurrentDamageSustained;
@@ -207,6 +209,7 @@ namespace AdvShields
                 //CurrentDamageSustained = maxEnergy;
                 controller.SettingsData.IsShieldOn.Us = enumShieldDomeState.Off;
                 controller.ShieldDome.gameObject.GetComponent<MeshRenderer>().enabled = false;
+                OverkillDamage = CurrentDamageSustained - maxEnergy;
             }
             if (!this.controller.OnPlayerTeam) DamageHelp.DisplayDamageMarker(Rounding.FloatToInt(realDamage), DamageType.Laser, GAME_STATE.MyTeam);
             if (isContinuous) AdjustTimeSinceLastHit(realDamage * 5);
@@ -241,6 +244,7 @@ namespace AdvShields
                 //CurrentDamageSustained = maxEnergy;
                 controller.SettingsData.IsShieldOn.Us = enumShieldDomeState.Off;
                 controller.ShieldDome.gameObject.GetComponent<MeshRenderer>().enabled = false;
+                OverkillDamage = CurrentDamageSustained - maxEnergy;
             }
             if (!this.controller.OnPlayerTeam) DamageHelp.DisplayDamageMarker(Rounding.FloatToInt(realDamage), DamageType.Crash, GAME_STATE.MyTeam);
             AdjustTimeSinceLastHit(realDamage);
@@ -265,6 +269,7 @@ namespace AdvShields
                 //CurrentDamageSustained = maxEnergy;
                 controller.SettingsData.IsShieldOn.Us = enumShieldDomeState.Off;
                 controller.ShieldDome.gameObject.GetComponent<MeshRenderer>().enabled = false;
+                OverkillDamage = CurrentDamageSustained - maxEnergy;
             }
             if (!this.controller.OnPlayerTeam) { if (!isParticle) DamageHelp.DisplayDamageMarker(Rounding.FloatToInt(realDamage), DamageType.Kinetic, GAME_STATE.MyTeam); }
             AdjustTimeSinceLastHit(realDamage);
@@ -284,6 +289,7 @@ namespace AdvShields
                 //CurrentDamageSustained = maxEnergy;
                 controller.SettingsData.IsShieldOn.Us = enumShieldDomeState.Off;
                 controller.ShieldDome.gameObject.GetComponent<MeshRenderer>().enabled = false;
+                OverkillDamage = CurrentDamageSustained - maxEnergy;
             }
             if (!this.controller.OnPlayerTeam) DamageHelp.DisplayDamageMarker(Rounding.FloatToInt(realDamage), DamageType.Plasma, GAME_STATE.MyTeam);
             AdjustTimeSinceLastHit(realDamage);
@@ -306,6 +312,7 @@ namespace AdvShields
                 //CurrentDamageSustained = maxEnergy;
                 controller.SettingsData.IsShieldOn.Us = enumShieldDomeState.Off;
                 controller.ShieldDome.gameObject.GetComponent<MeshRenderer>().enabled = false;
+                OverkillDamage = CurrentDamageSustained - maxEnergy;
             }
             if (!this.controller.OnPlayerTeam) DamageHelp.DisplayDamageMarker(Rounding.FloatToInt(realDamage), DamageType.Kinetic, GAME_STATE.MyTeam);
             AdjustTimeSinceLastHit(realDamage);
@@ -346,6 +353,7 @@ namespace AdvShields
                 //CurrentDamageSustained = maxEnergy;
                 controller.SettingsData.IsShieldOn.Us = enumShieldDomeState.Off;
                 controller.ShieldDome.gameObject.GetComponent<MeshRenderer>().enabled = false;
+                OverkillDamage = CurrentDamageSustained - maxEnergy;
             }
             if (!this.controller.OnPlayerTeam) DamageHelp.DisplayDamageMarker(Rounding.FloatToInt(realDamage), DamageType.Explosive, GAME_STATE.MyTeam);
             AdjustTimeSinceLastHit(realDamage);
@@ -391,6 +399,7 @@ namespace AdvShields
                 //CurrentDamageSustained = maxEnergy;
                 controller.SettingsData.IsShieldOn.Us = enumShieldDomeState.Off;
                 controller.ShieldDome.gameObject.GetComponent<MeshRenderer>().enabled = false;
+                OverkillDamage = CurrentDamageSustained - maxEnergy;
             }
             if (!this.controller.OnPlayerTeam) DamageHelp.DisplayDamageMarker(Rounding.FloatToInt(empdamage), DamageType.Emp, GAME_STATE.MyTeam);
             float remainingHealthFraction = Mathf.Clamp01((maxEnergy - CurrentDamageSustained) / maxEnergy);
@@ -487,6 +496,7 @@ namespace AdvShields
                 controller.SettingsData.IsShieldOn.Us = enumShieldDomeState.Off;
                 fireStorage.Clear();
                 controller.ShieldDome.gameObject.GetComponent<MeshRenderer>().enabled = false;
+                OverkillDamage = CurrentDamageSustained - maxEnergy;
             }
             if (!this.controller.OnPlayerTeam) DamageHelp.DisplayDamageMarker(Rounding.FloatToInt(realDamage), DamageType.Fire, GAME_STATE.MyTeam);
             AdjustTimeSinceLastHit(realDamage);
@@ -741,21 +751,25 @@ namespace AdvShields
         public void Update(AdvShieldStatusTwo ShieldStats)
         {
             HandleUpdateModifiers();
+            bool isShieldDead = false;
+            if (controller.SettingsData.IsShieldOn.Us == enumShieldDomeState.Off) { isShieldDead = true; }
             float timeThisTick = Time.deltaTime;
             TimeSinceModeSwap += timeThisTick;
             if (!isActiveRegen)
             {
                 TimeSinceLastHit += timeThisTick;
-                if (TimeSinceLastHit > ShieldStats.ActualWaitTime) isActiveRegen = true;
+                if (isShieldDead)
+                    { if (TimeSinceLastHit * 1.5f > ShieldStats.ActualWaitTime) isActiveRegen = true; }
+                else if (TimeSinceLastHit > ShieldStats.ActualWaitTime) isActiveRegen = true;
             }
-            if ((CurrentDamageSustained <= 0.0f) && (controller.SettingsData.IsShieldOn.Us == enumShieldDomeState.On) && TimeAtFullHealth < DomeShieldConstants.SHIELDREGENSWAPDELAY)
+            if ((CurrentDamageSustained <= 0.0f) && (!isShieldDead) && TimeAtFullHealth < DomeShieldConstants.SHIELDREGENSWAPDELAY)
             {
                 PassiveRegenText = "The shield is at full health, will move to idle mode soon";
                 CurrentDamageSustained = 0.0f;
                 TimeAtFullHealth += timeThisTick;
                 return;
             }
-            if ((CurrentDamageSustained <= 0.0f) && (controller.SettingsData.IsShieldOn.Us == enumShieldDomeState.On) && TimeAtFullHealth >= DomeShieldConstants.SHIELDREGENSWAPDELAY)
+            if ((CurrentDamageSustained <= 0.0f) && (!isShieldDead) && TimeAtFullHealth >= DomeShieldConstants.SHIELDREGENSWAPDELAY)
             {
                 PassiveRegenText = "The shield is at full health, it is not regenerating.";
                 CurrentDamageSustained = 0.0f;
@@ -763,7 +777,7 @@ namespace AdvShields
                 return;
             }
 
-            if ((CurrentDamageSustained > 0.0f) && (controller.SettingsData.IsShieldOn.Us == enumShieldDomeState.On) && (!isActiveRegen))
+            if ((CurrentDamageSustained > 0.0f) && (!isShieldDead) && (!isActiveRegen))
             {
                 if (ShieldDisabled) return;
                 if (TimeSinceModeSwap <= 0.5f) return;
@@ -775,7 +789,7 @@ namespace AdvShields
                 return;
             }
             if (!isActiveRegen) return;
-            if ((CurrentDamageSustained / ShieldStats.MaxHealth <= (1-(controller.SettingsData.ShieldReactivationPercent / 100))) && (controller.SettingsData.IsShieldOn.Us == enumShieldDomeState.Off))
+            if ((CurrentDamageSustained / ShieldStats.MaxHealth <= (1-(controller.SettingsData.ShieldReactivationPercent / 100))) && isShieldDead)
             {
                 if (TimeSinceModeSwap <= 0.5f) return;
                 controller.SettingsData.IsShieldOn.Us = enumShieldDomeState.On;

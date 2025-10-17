@@ -493,9 +493,11 @@ namespace AdvShields
 
             float driveAfterFactoring = GetExcessDriveAfterFactoring();
             bool flag_0 = currentStrength < driveAfterFactoring;
-            string text_0 = "This shield turned off from damage. Wait for it to regnerate.";
+            string text_0 = $"This shield turned off from damage. Overkill damage: {ShieldHandler.OverkillDamage} Wait for it to regnerate.";
+            bool isShieldDead = true;
+            if (SettingsData.IsShieldOn.Us == enumShieldDomeState.On) isShieldDead = false;
 
-            if (SettingsData.IsShieldOn.Us == enumShieldDomeState.On)
+            if (!isShieldDead)
             {
                 text_0 = "This shield is turned on";
             }
@@ -508,6 +510,7 @@ namespace AdvShields
             {
                 float secondsSinceLastHit = ShieldHandler.TimeSinceLastHit;
                 float timeRemaining = ShieldStats.ActualWaitTime - secondsSinceLastHit;
+                if (isShieldDead) timeRemaining = (ShieldStats.ActualWaitTime * 1.5f) - secondsSinceLastHit;
                 if (timeRemaining <= 0.0f)
                 {
                     text_1 = $"Shield is recharging, {currentHealth / ShieldStats.MaxHealth * 100:F1} % complete.";
