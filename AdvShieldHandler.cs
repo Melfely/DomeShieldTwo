@@ -759,7 +759,7 @@ namespace AdvShields
             {
                 TimeSinceLastHit += timeThisTick;
                 if (isShieldDead)
-                    { if (TimeSinceLastHit * 1.5f > ShieldStats.ActualWaitTime) isActiveRegen = true; }
+                    { if (TimeSinceLastHit > ShieldStats.ActualWaitTime * 1.5f) isActiveRegen = true; }
                 else if (TimeSinceLastHit > ShieldStats.ActualWaitTime) isActiveRegen = true;
             }
             if ((CurrentDamageSustained <= 0.0f) && (!isShieldDead) && TimeAtFullHealth < DomeShieldConstants.SHIELDREGENSWAPDELAY)
