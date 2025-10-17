@@ -118,17 +118,20 @@ namespace DomeShieldTwo
             if (ArmourClass < 2) ArmourClass = 2;
             //ArmourIncrease = ArmourClass - BaseArmourClass;
 
-            float PassiveRegenBeforePercent = (CurrentMaxEnergy / 2000) + (adjustedTransformerIncrease - 1);
-            PassiveRegenBeforePercent *= 2;
+            float PassiveRegenBeforePercent = (CurrentMaxEnergy / 2200) + (adjustedTransformerIncrease - 1);
+            //PassiveRegenBeforePercent *= 2;
             if (PassiveRegenBeforePercent > (MaxHealth / 20)) PassiveRegenBeforePercent = MaxHealth / 20;
             PassiveRegen = PassiveRegenBeforePercent * (1+(Mathf.Pow(ActualRegenPercent, 1.2f)/(6f - (ActualRegenPercent / 40))));
             //WHAT WE CURRENTLY HAVE IS PRETTY GOOD. DON'T MAKE SIGNIFICANT CHANGES WITHOUT KNOWING WHAT YOU ARE DOING AND PRESERVING THIS^
+            //So it's too strong lmaoooo. Let's wait to hear how much they want it nerfed before tinkering with things.
+            //Let's comment out the "passive regen before percent * 2" bit as well as make the passive regen before percent formula a bit harsher. Going from CME / 2K to 2.2K
             if (ShieldHandler.TargettedByContLaser) PassiveRegen *= (1f - (ShieldHandler.ContLaserRegenFactor * UnityEngine.Time.timeScale));
             if (ShieldHandler.SufferingFromDisruptor) PassiveRegen *= (1f - DisruptionFactor);
             Math.Round(PassiveRegen, 1);
             RegenIncrease = PassiveRegen - BaseRegen;
 
             if (ShieldData.IsShieldOn.Us == enumShieldDomeState.On) AffectNumbersByAvailableEnginePower();
+
             BaseWaitTime = (float)Math.Round(TotalBlocks * 0.25f, 1);
             ActualWaitTime = (float)Math.Round(EffectiveBlocks * 0.25f, 1);
             if (ActualWaitTime < 3f) ActualWaitTime = 3f;
