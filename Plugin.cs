@@ -19,7 +19,7 @@ namespace DomeShieldTwo
         /// </summary>
         public void OnLoad()
         {
-            AdvLogger.LogInfo("Loading Dome Shield Beta Test, Update 2. Does this match the the most recent version?");
+            AdvLogger.LogInfo("Loading Dome Shield Beta Test, RC6. Does this match the the most recent version?");
             AdvLogger.LogWarning("Attempting to load the assets", LogOptions._AlertDevInGame);
             GameObject loaderObj = new GameObject("AssetLoader");
             loaderObj.AddComponent<AssetLoader>();

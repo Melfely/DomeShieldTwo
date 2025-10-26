@@ -24,6 +24,7 @@ using BrilliantSkies.Ui.Consoles.BackgroundDisplays;
 using BrilliantSkies.Ui.Elements;
 using BrilliantSkies.Ui.Layouts;
 using BrilliantSkies.Ui.Tips;
+using DomeShieldTwo.ui;
 
 namespace AdvShields.UI
 {
@@ -37,9 +38,8 @@ namespace AdvShields.UI
         {
             ConsoleWindow window = this.NewWindow(0,"Shield Dome", new ScaledRectangle(10f, 10f, 550f, 780f));
             window.DisplayTextPrompt = false;
-            window.SetMultipleTabs(new AdvShieldTab(window, _focus), new AdvShieldAppearanceTab(window, _focus), new ExtensiveShieldStatisticsUI(window, _focus), new ControlUiTab(window, _focus.Control, "Shield drive complex controller settings"));
+            window.SetMultipleTabs(new AdvShieldSettingsControlTab(window, _focus), new AdvShieldTransformTab(window, _focus), new ExtensiveShieldStatisticsUI(window, _focus), new AdvShieldAppearanceTab(window, _focus), new ControlUiTab(window, _focus.Control, "Shield drive complex controller settings"));
             return window;
-
         }
     }
 }

@@ -16,7 +16,7 @@ namespace AdvShields.Models
         On,
         Off
     }
-
+    /*
     public enum enumShieldClassSelection
     {
         QH,
@@ -25,4 +25,5 @@ namespace AdvShields.Models
         GEN,
         REG
     }
+    */
 }

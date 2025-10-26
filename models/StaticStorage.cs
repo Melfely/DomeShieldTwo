@@ -105,7 +105,7 @@ namespace AdvShields.Models
                 AdvLogger.LogError("WARNING: You seem to have more than one install of the Dome Shield. It is likely that you have the Beta test as well as the non-beta test. Please delete one of these at Documents -> From The Depths -> Mods. THE MOD WILL NOT WORK WITH A DOUBLE INSTALL.", LogOptions._AlertDevAndCustomerInGame);
             }
             if (DomeShieldsInstalled == 0) AdvLogger.LogError("ERROR: The Dome Shield mod folder was not located. Please do not manually change the name of the folder when you download it. (If you are sure didn't change the install name at all, please send me proof and I will fix this.", LogOptions._AlertDevAndCustomerInGame);
-            if (IsInBetaTest) AdvLogger.LogInfo("You are using the BETA TEST version of the Dome Shield mod. You are likely to encounter bugs, unfinished pieces, and unbalanced mechanics. Please provide feedback in the discord server for this mod. Thank you for testing this mod!", LogOptions._AlertDevAndCustomerInGame);
+            if (IsInBetaTest) AdvLogger.LogInfo("NOT AN ERROR. You are using the BETA TEST version of the Dome Shield mod. You are likely to encounter bugs, unfinished pieces, and unbalanced mechanics. Please provide feedback in the discord server for this mod. Thank you for testing this mod!", LogOptions._AlertDevAndCustomerInGame);
 
             string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
     "From The Depths", "Mods", modfoldername, "Assets", "shielddome", "shielddomebundle");

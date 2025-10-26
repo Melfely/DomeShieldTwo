@@ -11,6 +11,8 @@ namespace AdvShields
         public float Height { get; set; }
         public float Length { get; set; }
 
+        public Vector3 MostRecentHitPoint { get; set; }
+
         public Quaternion Rotation { get; set; }
         public Vector3 Position { get; set; }
 
@@ -24,7 +26,7 @@ namespace AdvShields
 
         public void UpdateInfo()
         {
-            AdvShieldData d = _controller.ShieldData;
+            AdvShieldTransformData d = _controller.TransformData;
 
             Width = d.Width / 2;
             Height = d.Height / 2;
@@ -101,7 +103,7 @@ namespace AdvShields
             Width = w;
             Height = h;
             Length = l;
-
+            if (intersects) MostRecentHitPoint = position;
             return intersects;
         }
 

@@ -1,0 +1,17 @@
+This is the example FTD Props file, that will be included with the build. Change the below path to your valid FTD install location.
+Create a file with the same name as this one, but with just "FTD.props" as the name and file extension. 
+Then copy and paste the below XML into the file, ignoring the dashed lines.
+Make sure you updated the directory location.
+
+
+-----------------------------------
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <!-- 
+      This is the path to YOUR From the Depths installation folder.
+      This file should NOT be committed to Git.
+    -->
+    <FtDPath>E:\Games\Steam\steamapps\common\From The Depths</FtDPath>
+  </PropertyGroup>
+</Project>
