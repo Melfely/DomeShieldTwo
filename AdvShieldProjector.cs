@@ -493,9 +493,11 @@ namespace AdvShields
 
             float driveAfterFactoring = GetExcessDriveAfterFactoring();
             bool flag_0 = currentStrength < driveAfterFactoring;
-            string text_0 = "This shield turned off from damage. Wait for it to regnerate.";
+            string text_0 = $"This shield turned off from damage. Overkill damage: {ShieldHandler.OverkillDamage} Wait for it to regnerate.";
+            bool isShieldDead = true;
+            if (SettingsData.IsShieldOn.Us == enumShieldDomeState.On) isShieldDead = false;
 
-            if (SettingsData.IsShieldOn.Us == enumShieldDomeState.On)
+            if (!isShieldDead)
             {
                 text_0 = "This shield is turned on";
             }
@@ -507,15 +509,21 @@ namespace AdvShields
             if (ShieldHandler.CurrentDamageSustained > 0.0f)
             {
                 float secondsSinceLastHit = ShieldHandler.TimeSinceLastHit;
-                float timeRemaining = ShieldStats.ActualWaitTime - secondsSinceLastHit;
+                float timeRemaining;
+                if (isShieldDead) timeRemaining = (ShieldStats.ActualWaitTime * 1.5f) - secondsSinceLastHit;
+                else timeRemaining = ShieldStats.ActualWaitTime - secondsSinceLastHit;
                 if (timeRemaining <= 0.0f)
                 {
-                    text_1 = $"Shield is recharging, {currentHealth / ShieldStats.MaxHealth * 100:F1} % complete.";
+                    //text_1 = $"Shield is recharging, {currentHealth / ShieldStats.MaxHealth * 100:F1} % complete.";
+                    //Trying new system
+                    text_1 = $"Shield is recharging, {ShieldHandler.CurrentDamageSustained / (ShieldStats.PassiveRegen * 10):F1} seconds until complete.";
+                    progress = Mathf.Clamp01(Mathf.SmoothStep(0, 1, secondsSinceLastHit / ShieldStats.ActualWaitTime));
                 }
                 else
                 {
                     text_1 = $"Time until recharge: {timeRemaining:F1}s";
-                    progress = Mathf.Clamp01(Mathf.SmoothStep(0, 1, secondsSinceLastHit / ShieldStats.ActualWaitTime));
+                    if (isShieldDead) progress = Mathf.Clamp01(Mathf.SmoothStep(0, 1, secondsSinceLastHit * 1.5f / timeRemaining));
+                    else progress = Mathf.Clamp01(Mathf.SmoothStep(0, 1, secondsSinceLastHit / timeRemaining));
                 }
             }
             int num = 500;
